@@ -1,0 +1,38 @@
+[project]
+name = "universal-test-runner"
+version = "0.1.0"
+
+authors = [{ name = "David Brownman", email = "beamneocube@gmail.com" }]
+description = "Universal, language-agnostic test runner."
+readme = "README.md"
+license = { file = "LICENSE" }
+
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Natural Language :: English",
+]
+keywords = ["testing"]
+
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest==7.3.1", "responses==0.23.1", "pyright==1.1.309"]
+release = ["twine==4.0.2", "build==0.10.0"]
+
+[project.urls]
+"Homepage" = "https://github.com/xavdid/universal-test-runner"
+"Bug Tracker" = "https://github.com/xavdid/universal-test-runner/issues"
+"Author" = "https://xavd.id"
+"Changelog" = "https://github.com/xavdid/universal-test-runner/blob/main/CHANGELOG.md"
+
+[project.scripts]
+t = "test_runner.runner:run"
+
+[build-system]
+requires = ["flit_core>=3.4"]
+build-backend = "flit_core.buildapi"
