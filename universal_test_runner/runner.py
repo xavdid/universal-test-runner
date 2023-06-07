@@ -15,19 +15,21 @@ from universal_test_runner.matchers import ALL_MATCHERS
 # i'll be able to put functions in a few file then, I think, since I have all the info I need.
 
 
-def run_tests(context: Context):
+def run_test_command(context: Context) -> int:
     for matcher in ALL_MATCHERS:
-        if matcher.test(context):
-            command = [*matcher.command, *context.args]
+        if not matcher.matches(context):
+            continue
 
-            try:
-                return subprocess.run(command)
-            except FileNotFoundError:
-                print("command not found:", command[0])
-                sys.exit(1)
+        command = [*matcher.command, *context.args]
 
-    print("No testing method found!")
-    sys.exit(1)
+        try:
+            return subprocess.run(command).returncode
+        except FileNotFoundError:
+            print("command not found:", command[0])
+            return 1
+    else:
+        print("no testing method found!")
+        return 1
 
 
 def run():
@@ -35,12 +37,13 @@ def run():
     current_dir = os.getcwd()
 
     c = Context(
-        list(Path(current_dir).iterdir()),
+        # makes the file list deterministic
+        sorted(Path(current_dir).iterdir()),
         # Pass any arguments to the test runner through to the test command
         sys.argv[1:],
     )
 
-    run_tests(c)
+    sys.exit(run_test_command(c))
 
 
 if __name__ == "__main__":

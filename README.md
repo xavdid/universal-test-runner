@@ -2,7 +2,7 @@
 
 The universal test runner is a zero-configuration, language-agnostic way to run your unit tests.
 
-If you're working on a JS project, it runs `[your package manager here] test`. Doing rust? `cargo test` coming right up. It's got a powerful suite of heuristics to ensure it runs the right command.
+If you're working on a JS project, it runs `[your package manager here] test`. You've run `pytest` in this folder before? `pytest` it is. Rust project? `cargo test` coming right up.
 
 ## Installation
 
@@ -21,7 +21,7 @@ pipx install universal-test-runner
 ## Supported Languages
 
 1. Python
-   - uses `pytest` if available
+   - uses `pytest` if you've run `pytest` before
    - looks for a `tests.py` file if not
 2. JS/TS
    - runs `[package manager] test`, where `[package manager]` is:

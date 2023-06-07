@@ -56,21 +56,20 @@ class MatcherTestCase:
         return f"{self.matcher} w/ files={self.files} & args={self.args} -> `{self.passes}`"
 
     @staticmethod
-    def fail(matcher: matchers.Matcher):
+    def failing_case(matcher: matchers.Matcher):
         return MatcherTestCase(matcher, passes=False)
 
 
 matching_tests: list[MatcherTestCase] = [
     # each matcher depends on at least one file, so every matcher with no files should be negative
-    *[MatcherTestCase.fail(m) for m in matchers.ALL_MATCHERS],
+    *[MatcherTestCase.failing_case(m) for m in matchers.ALL_MATCHERS],
     # simple cases
     MatcherTestCase(matchers.pytest, [".pytest_cache"]),
     MatcherTestCase(matchers.py, ["tests.py"]),
     MatcherTestCase(matchers.elixir, ["mix.exs"]),
     MatcherTestCase(matchers.rust, ["Cargo.toml"]),
     MatcherTestCase(matchers.clojure, ["project.clj"]),
-    # go
-    # these both path, so ordering matters
+    # these both pass, so ordering in the master list matters
     MatcherTestCase(matchers.go_multi, ["go.mod"]),
     MatcherTestCase(matchers.go_single, ["go.mod"]),
     MatcherTestCase(matchers.go_multi, ["go.mod"], args=["whatever"], passes=False),
@@ -85,5 +84,5 @@ matching_tests: list[MatcherTestCase] = [
     ids=repr,
 )
 def test_matches(test_case: MatcherTestCase):
-    context = Context([Path(f) for f in test_case.files], test_case.args)
-    assert test_case.matcher.test(context) == test_case.passes
+    context = Context.from_strings(test_case.files, test_case.args)
+    assert test_case.matcher.matches(context) == test_case.passes
