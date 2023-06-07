@@ -26,10 +26,6 @@ pipx install universal-test-runner
 
 Once installed, the command `t` will be available. Run that in a folder with tests and it'll do its best to run your unit tests.
 
-```shell
-t
-```
-
 ```
 % t
 ====================== test session starts ======================
