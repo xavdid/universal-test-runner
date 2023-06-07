@@ -39,7 +39,7 @@ tests/test_runner.py ............                         [100%]
 ====================== 37 passed in 0.04s =======================
 ```
 
-If it can't find
+If it can't guess the testing method, it will tell you so. Feel free to open an issue to request wider language support!
 
 ## Supported Languages
 
@@ -70,3 +70,31 @@ If it can't find
 ## Motivation
 
 I work in a few languages at a time, so I've actually had a [version of this in my dotfiles](https://github.com/xavdid/dotfiles/blob/6bd5f56b1f9ad2dcef9f8b72413d30779b378aef/node/aliases.zsh#L45-L73) for a while. Also, as I've been doing [Exercism's #12in23 program](https://exercism.org/challenges/12in23), I'm _really_ switching languages. It's nice not to have to re-learn any muscle memory. Plus, increasingly complex `bash` was holding me back.
+
+## Development
+
+This section is people making changes to this package.
+
+When in a virtual environment, run the following:
+
+```bash
+pip install -e '.[test]'
+```
+
+This installs the package in `--edit` mode and makes its dependencies available. You can now run `reddit-user-to-sqlite` to invoke the CLI.
+
+### Running Tests
+
+In your virtual environment, a simple `pytest` should run the unit test suite. You can also run `pyright` for type checking.
+
+### Releasing New Versions
+
+> these notes are mostly for myself (or other contributors)
+
+0. ensure tests pass (`pytest`)
+1. install release tooling (`pip install -e '.[release]'`)
+2. build the package (`python -m build`)
+3. upload the release (`python -m twine upload dist/*`)
+   1. give your username as `__token__`
+   2. give your password as your stored API key
+   3. If you're getting invalid password, verify that `~/.pypirc` is empty
