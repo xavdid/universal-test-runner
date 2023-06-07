@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 from universal_test_runner.context import Context
-from universal_test_runner.runner import run_test_command, run
+from universal_test_runner.runner import run, run_test_command
 
 
 def test_no_matches(capsys):

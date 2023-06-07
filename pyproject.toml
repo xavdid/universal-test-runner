@@ -3,7 +3,7 @@ name = "universal-test-runner"
 version = "0.1.0"
 
 authors = [{ name = "David Brownman", email = "beamneocube@gmail.com" }]
-description = "Universal, language-agnostic test runner."
+description = "Universal, language-aware unit test runner."
 readme = "README.md"
 license = { file = "LICENSE" }
 
