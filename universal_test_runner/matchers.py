@@ -40,9 +40,15 @@ go_single = Matcher(
     "go test",
 )
 
+makefile = Matcher(
+    "makefile",
+    lambda c: "Makefile" in c.files
+    and any(l.startswith("test:") for l in c.read_file("Makefile")),
+    "make test",
+)
+
 # TODO:
 # - js
-# - makefile?
 # - ruby?
 
 # misc simple cases
@@ -62,4 +68,5 @@ ALL_MATCHERS: list[Matcher] = [
     elixir,
     rust,
     clojure,
+    makefile,
 ]

@@ -56,6 +56,8 @@ If it can't guess the testing method, it will tell you so. Feel free to open an 
    - runs `mix test`
 5. Clojure
    - runs `lein test`
+6. Makefile
+   - looks for a line that starts with `test:`
 
 ### Upcoming Languages
 
@@ -64,8 +66,6 @@ If it can't guess the testing method, it will tell you so. Feel free to open an 
      - `yarn` if there's a `yarn.lock`
      - `pnpm` if there's a `pnpm-lock.yaml`
      - `npm` otherwise
-2. Makefile
-   - looks for a line that starts with `test:`
 
 ## Motivation
 

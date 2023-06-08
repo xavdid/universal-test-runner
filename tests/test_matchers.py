@@ -6,38 +6,51 @@ import pytest
 import universal_test_runner.matchers as matchers
 from universal_test_runner.context import Context
 
+matcher_funcs = [
+    export
+    for export in dir(matchers)
+    if isinstance(getattr(matchers, export), matchers.Matcher)
+]
+
 
 def test_export():
     """
     this function asserts that every defined Matcher in `matchers.py` is included in the exported `MATCHERS` list _and_ nothing is double-counted.
     """
-    matcher_funcs = [
-        export
-        for export in dir(matchers)
-        if isinstance(getattr(matchers, export), matchers.Matcher)
-    ]
 
-    assert len(matchers.ALL_MATCHERS) == len(matcher_funcs)
+    assert len(matchers.ALL_MATCHERS) == len(
+        matcher_funcs
+    ), "a matcher was written but not added to ALL_MATCHERS"
     assert len(set(matchers.ALL_MATCHERS)) == len(matchers.ALL_MATCHERS)
     assert matchers.ALL_MATCHERS.index(matchers.go_multi) < matchers.ALL_MATCHERS.index(
         matchers.go_single
     ), "must run go_multi before go_single"
 
 
+simple_command_tests = [
+    (matchers.pytest, ["pytest"]),
+    (matchers.py, ["python", "tests.py"]),
+    (matchers.go_single, ["go", "test"]),
+    (matchers.go_multi, ["go", "test", "./..."]),
+    (matchers.elixir, ["mix", "test"]),
+    (matchers.rust, ["cargo", "test"]),
+    (matchers.clojure, ["lein", "test"]),
+    (matchers.makefile, ["make", "test"]),
+]
+
+
+def test_all_matchers_have_simple_command_test():
+    assert len(simple_command_tests) == len(
+        matcher_funcs
+    ), "a matcher is missing its simple command test"
+
+
 @pytest.mark.parametrize(
     ["matcher", "result"],
-    [
-        (matchers.pytest, ["pytest"]),
-        (matchers.py, ["python", "tests.py"]),
-        (matchers.go_single, ["go", "test"]),
-        (matchers.go_multi, ["go", "test", "./..."]),
-        (matchers.elixir, ["mix", "test"]),
-        (matchers.rust, ["cargo", "test"]),
-        (matchers.clojure, ["lein", "test"]),
-    ],
+    simple_command_tests,
     ids=lambda p: repr(p) if isinstance(p, matchers.Matcher) else None,
 )
-def test_resulting_commands(matcher: matchers.Matcher, result: list[str]):
+def test_simple_commands(matcher: matchers.Matcher, result: list[str]):
     """
     a simple list of the commands for each matcher so we know if they change unexpectedly
     """
@@ -60,29 +73,44 @@ class MatcherTestCase:
         return MatcherTestCase(matcher, passes=False)
 
 
-matching_tests: list[MatcherTestCase] = [
-    # each matcher depends on at least one file, so every matcher with no files should be negative
-    *[MatcherTestCase.failing_case(m) for m in matchers.ALL_MATCHERS],
-    # simple cases
-    MatcherTestCase(matchers.pytest, [".pytest_cache"]),
-    MatcherTestCase(matchers.py, ["tests.py"]),
-    MatcherTestCase(matchers.elixir, ["mix.exs"]),
-    MatcherTestCase(matchers.rust, ["Cargo.toml"]),
-    MatcherTestCase(matchers.clojure, ["project.clj"]),
-    # these both pass, so ordering in the master list matters
-    MatcherTestCase(matchers.go_multi, ["go.mod"]),
-    MatcherTestCase(matchers.go_single, ["go.mod"]),
-    MatcherTestCase(matchers.go_multi, ["go.mod"], args=["whatever"], passes=False),
-    MatcherTestCase(matchers.go_single, ["go.mod"], args=["token"]),
-    MatcherTestCase(matchers.go_single, ["parser_test.go"]),
-]
-
-
 @pytest.mark.parametrize(
     "test_case",
-    matching_tests,
+    [
+        # each matcher depends on at least one file, so every matcher with no files should be negative
+        *[MatcherTestCase.failing_case(m) for m in matchers.ALL_MATCHERS],
+        # simple cases
+        MatcherTestCase(matchers.pytest, [".pytest_cache"]),
+        MatcherTestCase(matchers.py, ["tests.py"]),
+        MatcherTestCase(matchers.elixir, ["mix.exs"]),
+        MatcherTestCase(matchers.rust, ["Cargo.toml"]),
+        MatcherTestCase(matchers.clojure, ["project.clj"]),
+        # these both pass, so ordering in the master list matters
+        MatcherTestCase(matchers.go_multi, ["go.mod"]),
+        MatcherTestCase(matchers.go_single, ["go.mod"]),
+        MatcherTestCase(matchers.go_multi, ["go.mod"], args=["whatever"], passes=False),
+        MatcherTestCase(matchers.go_single, ["go.mod"], args=["token"]),
+        MatcherTestCase(matchers.go_single, ["parser_test.go"]),
+    ],
     ids=repr,
 )
 def test_matches(test_case: MatcherTestCase):
     context = Context.from_strings(test_case.files, test_case.args)
     assert test_case.matcher.matches(context) == test_case.passes
+
+
+def test_makefile(tmp_path: Path):
+    f = tmp_path / "Makefile"
+    f.write_text(
+        "# Run all the tests\ntest:\ngo test $(TEST_OPTIONS) -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m\n.PHONY: test"
+    )
+    context = Context([f], [])
+    assert matchers.makefile.matches(context)
+
+
+def test_makefile_no_test_command(tmp_path: Path):
+    f = tmp_path / "Makefile"
+    f.write_text(
+        "# Run all the tests\nvalidate:\ngo test $(TEST_OPTIONS) -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m\n.PHONY: test"
+    )
+    context = Context([f], [])
+    assert not matchers.makefile.matches(context)
