@@ -1,7 +1,9 @@
-from unittest.mock import patch
-from universal_test_runner.context import Context
-
 from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+from universal_test_runner.context import Context
 
 
 def test_process_files():
@@ -44,3 +46,21 @@ def test_load_json_uses_cache(tmp_path: Path):
 
         # subsequent reads don't read the file again
         p.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ["files", "looking", "expected"],
+    [
+        (["a", "b", "c"], ["a"], True),
+        (["a", "b", "c"], ["a", "b"], True),
+        (["a", "b", "c"], ["a", "b", "c"], True),
+        (["a", "b", "c"], ["a", "b", "c", "d"], False),
+        ([], ["a", "b", "c", "d"], False),
+        (["a"], ["b"], False),
+        ([], [], False),
+    ],
+    ids=repr,
+)
+def test_has_files(files: list[str], looking: list[str], expected: bool):
+    print(files)
+    assert Context.from_strings(files).has_files(*looking) == expected

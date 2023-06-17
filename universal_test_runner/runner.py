@@ -6,14 +6,6 @@ from pathlib import Path
 from universal_test_runner.context import Context
 from universal_test_runner.matchers import ALL_MATCHERS
 
-# TODO: build a context object that has
-# - cwd
-# - filenames
-# - a dict of {name => path object?}
-# - the args the command is run with
-# and pass it to each function
-# i'll be able to put functions in a few file then, I think, since I have all the info I need.
-
 
 def run_test_command(context: Context) -> int:
     for matcher in ALL_MATCHERS:

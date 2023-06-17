@@ -1,8 +1,9 @@
-from functools import cache
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
+# from functools import cache
 
 
 @dataclass
@@ -21,7 +22,7 @@ class Context:
         return Context([Path(f) for f in paths], args or [])
 
     # can't use functools.cache because the dataclass isn't hashable (because of its lists?)
-    # TODO: I swear this is fixable
+    # TODO: I swear this is fixable; remove custom file cache
     # @cache
     def _load_file(self, filename: str) -> str:
         if filename in self._file_cache:
@@ -32,8 +33,11 @@ class Context:
 
         return text
 
-    def read_file(self, filename: str):
+    def read_file(self, filename: str) -> list[str]:
         return self._load_file(filename).splitlines()
 
     def read_json(self, filename: str):
         return json.loads(self._load_file(filename))
+
+    def has_files(self, *filenames: str) -> bool:
+        return bool(self.files) and all(f in self.files for f in filenames)

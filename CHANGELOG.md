@@ -6,7 +6,8 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 
 _released `TBD`_
 
-- add support for Makefiles
+- add support for the `test` directive in `Makefile`s
+- add support for the `test` script in a `package.json` file
 
 ## 0.1.0
 

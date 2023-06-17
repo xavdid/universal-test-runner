@@ -1,6 +1,6 @@
 [project]
 name = "universal-test-runner"
-version = "0.1.0"
+version = "0.2.0"
 
 authors = [{ name = "David Brownman", email = "beamneocube@gmail.com" }]
 description = "Universal, language-aware unit test runner."
@@ -36,3 +36,9 @@ t = "universal_test_runner.runner:run"
 [build-system]
 requires = ["flit_core>=3.4"]
 build-backend = "flit_core.buildapi"
+
+# needed so the LSP performs typechecking
+[tool.pyright]
+
+[tool.isort]
+profile = "black"

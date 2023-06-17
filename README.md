@@ -2,11 +2,9 @@
 
 The universal test runner is a zero-configuration, language-aware way to run your unit tests.
 
-<!-- If you're working on a JS project, it runs `[your package manager here] test`. You've run `pytest` in this folder before? `pytest` it is. Rust project? `cargo test` coming right up. -->
+If you're working on a JS project, it runs `[your package manager here] test`. You've run `pytest` in this folder before? `pytest` it is. Rust project? `cargo test` coming right up. Is also clever about running all your `go` module tests (regardless of how they're organized). No matter the command, all args are passed directly into the test runner.
 
-If you've run `pytest` in this folder before, this tool invokes `pytest`. Rust project? `cargo test` coming right up. Is also clever about running all your `go` module tests (regardless of how they're organized). No matter the command, all args are passed directly into the test runner.
-
-Currently [supports](#supported-languages) 5 languages, with [more on the way](#upcoming-languages).
+Currently [supports](#supported-languages) 7 languages (and their respective test frameworks). Please open an issue if I'm missing your favorite!
 
 ## Installation
 
@@ -58,14 +56,11 @@ If it can't guess the testing method, it will tell you so. Feel free to open an 
    - runs `lein test`
 6. Makefile
    - looks for a line that starts with `test:`
-
-### Upcoming Languages
-
-1. JS/TS
+7. JS/TS
    - if there's a `package.json` and it has a `test` script, runs `[package manager] test`, where `[package manager]` is:
+     - `npm` if there's a `package-lock.json`
      - `yarn` if there's a `yarn.lock`
      - `pnpm` if there's a `pnpm-lock.yaml`
-     - `npm` otherwise
 
 ## Motivation
 

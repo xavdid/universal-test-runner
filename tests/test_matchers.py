@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -36,6 +37,9 @@ simple_command_tests = [
     (matchers.rust, ["cargo", "test"]),
     (matchers.clojure, ["lein", "test"]),
     (matchers.makefile, ["make", "test"]),
+    (matchers.npm, ["npm", "test"]),
+    (matchers.yarn, ["yarn", "test"]),
+    (matchers.pnpm, ["pnpm", "test"]),
 ]
 
 
@@ -114,3 +118,53 @@ def test_makefile_no_test_command(tmp_path: Path):
     )
     context = Context([f], [])
     assert not matchers.makefile.matches(context)
+
+
+def test_has_test_script():
+    assert matchers.has_test_script({"scripts": {"build": "tsc", "test": "yarn"}})
+
+
+def test_has_no_test_script():
+    assert not matchers.has_test_script(
+        {"scripts": {"build": "tsc", "validate": "yarn"}}
+    )
+
+
+def test_has_no__scripts():
+    assert not matchers.has_test_script({})
+
+
+@pytest.mark.parametrize(
+    ["c", "lockfile", "expected"],
+    [
+        (
+            Context.from_strings(["package.json", "package-lock.json"]),
+            "package-lock.json",
+            True,
+        ),
+        (Context.from_strings(["package.json"]), "package-lock.json", False),
+        (
+            Context.from_strings(["package.json", "yarn.lock"]),
+            "yarn.lock",
+            True,
+        ),
+        (Context.from_strings(["package.json"]), "yarn.lock", False),
+        (
+            Context.from_strings(["package.json", "pnpm-lock.yaml"]),
+            "pnpm-lock.yaml",
+            True,
+        ),
+        (Context.from_strings(["package.json"]), "pnpm-lock.yaml", False),
+        (Context.from_strings([]), "pnpm-lock.yaml", False),
+    ],
+)
+@patch("pathlib.Path.read_text")
+def test_has_test_script_and_lockfile(
+    mock_read: Mock, c: Context, lockfile: str, expected
+):
+    if expected:
+        mock_read.return_value = '{"scripts": {"build": "tsc", "test": "yarn"}}'
+    else:
+        mock_read.return_value = "{}"
+
+    assert matchers.has_test_script_and_lockfile(c, lockfile) == expected
