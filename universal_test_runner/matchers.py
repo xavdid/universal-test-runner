@@ -42,7 +42,8 @@ go_multi = Matcher(
 # however, if we're in the package root and there's a test file here, then we can just run
 go_single = Matcher(
     "go_single",
-    lambda c: c.has_files("go.mod") or any(re.search(r"_test.go$", f) for f in c.files),
+    lambda c: c.has_files("go.mod")
+    or any(re.search(r"_test.go$", f) for f in c.filenames),
     "go test",
 )
 

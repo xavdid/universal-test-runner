@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 import universal_test_runner.matchers as matchers
+from tests.conftest import ContextBuilderFunc, FileWriterFunc
 from universal_test_runner.context import Context
 
 matcher_funcs = [
@@ -80,7 +81,7 @@ class MatcherTestCase:
 @pytest.mark.parametrize(
     "test_case",
     [
-        # each matcher depends on at least one file, so every matcher with no files should be negative
+        # each matcher depends on at least one file, so each matcher with no files should not match
         *[MatcherTestCase.failing_case(m) for m in matchers.ALL_MATCHERS],
         # simple cases
         MatcherTestCase(matchers.pytest, [".pytest_cache"]),
@@ -97,24 +98,28 @@ class MatcherTestCase:
     ],
     ids=repr,
 )
-def test_matches(test_case: MatcherTestCase):
-    context = Context.from_strings(test_case.files, test_case.args)
+def test_matches(test_case: MatcherTestCase, build_context: ContextBuilderFunc):
+    context = build_context(test_case.files, test_case.args)
     assert test_case.matcher.matches(context) == test_case.passes
 
 
-def test_makefile(tmp_path: Path):
-    f = tmp_path / "Makefile"
-    f.write_text(
-        "# Run all the tests\ntest:\ngo test $(TEST_OPTIONS) -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m\n.PHONY: test"
-    )
-    context = Context([f], [])
-    assert matchers.makefile.matches(context)
+@pytest.mark.parametrize(
+    ["text", "expected"],
+    [
+        (
+            "# Run all the tests\ntest:\ngo test $(TEST_OPTIONS) -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m\n.PHONY: test",
+            True,
+        ),
+        (
+            "# Run all the tests\nvalidate:\ngo test $(TEST_OPTIONS) -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m\n.PHONY: test",
+            False,
+        ),
+    ],
+)
+def test_makefile(
+    text, expected, write_file: FileWriterFunc, build_context: ContextBuilderFunc
+):
+    write_file("Makefile", text)
+    c = build_context()
 
-
-def test_makefile_no_test_command(tmp_path: Path):
-    f = tmp_path / "Makefile"
-    f.write_text(
-        "# Run all the tests\nvalidate:\ngo test $(TEST_OPTIONS) -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt $(SOURCE_FILES) -run $(TEST_PATTERN) -timeout=2m\n.PHONY: test"
-    )
-    context = Context([f], [])
-    assert not matchers.makefile.matches(context)
+    assert matchers.makefile.matches(c) == expected

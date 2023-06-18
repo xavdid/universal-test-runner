@@ -4,12 +4,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from tests.conftest import ContextBuilderFunc
 from universal_test_runner.context import Context
 from universal_test_runner.runner import run, run_test_command
 
 
-def test_no_matches(capsys):
-    assert run_test_command(Context.from_strings([])) == 1
+def test_no_matches(capsys, build_context: ContextBuilderFunc):
+    assert run_test_command(build_context()) == 1
     out, _ = capsys.readouterr()
     assert "no testing method" in out
 
@@ -26,10 +27,12 @@ class RunnerTestCase:
 
 @patch("subprocess.run")
 class TestRunner:
-    def test_command_not_found(self, subp_run: Mock, capsys):
+    def test_command_not_found(
+        self, subp_run: Mock, capsys, build_context: ContextBuilderFunc
+    ):
         subp_run.side_effect = FileNotFoundError
 
-        assert run_test_command(Context.from_strings([".pytest_cache"])) == 1
+        assert run_test_command(build_context([".pytest_cache"])) == 1
 
         out, _ = capsys.readouterr()
         assert "command not found:" in out
@@ -53,8 +56,13 @@ class TestRunner:
         ],
         ids=repr,
     )
-    def test_matchers(self, subp_run: Mock, test_case: RunnerTestCase):
-        run_test_command(Context.from_strings(test_case.files, test_case.args))
+    def test_matchers(
+        self,
+        subp_run: Mock,
+        test_case: RunnerTestCase,
+        build_context: ContextBuilderFunc,
+    ):
+        run_test_command(build_context(test_case.files, test_case.args))
 
         subp_run.assert_called_once_with(test_case.expected_command.split())
 
@@ -63,18 +71,21 @@ class TestRunner:
 @patch("sys.exit")
 @patch("universal_test_runner.runner.run_test_command")
 @patch("os.getcwd")
-def test_run(mock_cwd: Mock, mock_runner: Mock, mock_exit: Mock, tmp_path: Path):
+def test_run(
+    mock_cwd: Mock,
+    mock_runner: Mock,
+    mock_exit: Mock,
+    tmp_path: Path,
+    build_context: ContextBuilderFunc,
+    touch_files,
+):
+    files = ["x.py", "y.py", "z.py"]
+    touch_files(files)
     mock_cwd.return_value = str(tmp_path)
-
-    files = [
-        (tmp_path / "x.py"),
-        (tmp_path / "y.py"),
-        (tmp_path / "z.py"),
-    ]
-    for f in files:
-        f.touch()
 
     run()
 
-    mock_runner.assert_called_once_with(Context(files, ["-a", "--b", "c"]))
+    mock_runner.assert_called_once_with(
+        Context(str(tmp_path), frozenset(files), ("-a", "--b", "c"))
+    )
     mock_exit.assert_called_once_with(mock_runner.return_value)

@@ -29,12 +29,7 @@ def run_test_command(context: Context) -> int:
 def run():
     current_dir = os.getcwd()
 
-    c = Context(
-        # sorting makes the file list deterministic
-        sorted(Path(current_dir).iterdir()),
-        # pass any arguments to the test runner through to the test command
-        sys.argv[1:],
-    )
+    c = Context.build(current_dir, sys.argv[1:])
 
     sys.exit(run_test_command(c))
 
