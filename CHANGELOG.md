@@ -4,7 +4,7 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 
 ## 0.2.0
 
-_released `TBD`_
+_released `2023-06-18`_
 
 - add support for the `test` directive in `Makefile`s
 - add support for the `test` script in a `package.json` file
