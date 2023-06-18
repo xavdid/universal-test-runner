@@ -21,11 +21,17 @@ class Matcher:
         return f"<Matcher {self.name}>"
 
     @staticmethod
-    def basic(name: str, file: str, command: str):
+    def basic_builder(name: str, file: str, command: str) -> "Matcher":
         """
-        shorthand for running a command if a single file is in the file list
+        shorthand builder for running a command if a single file is in the file list
         """
         return Matcher(name, lambda c: c.has_files(file), command)
+
+    @staticmethod
+    def js_builder(name: str, lockfile: str) -> "Matcher":
+        return Matcher(
+            name, lambda c: c.has_test_script_and_lockfile(lockfile), f"{name} test"
+        )
 
 
 # for go modules with nested packages, running `go test` on its own runs no test.
@@ -47,34 +53,19 @@ makefile = Matcher(
     "make test",
 )
 
-has_test_script = lambda d: bool(d.get("scripts", {}).get("test"))
-
-
-def has_test_script_and_lockfile(c: Context, lockfile: str) -> bool:
-    return c.has_files("package.json", lockfile) and has_test_script(
-        c.read_json("package.json")
-    )
-
-
-def build_js_matcher(name: str, lockfile: str):
-    return Matcher(
-        name, lambda c: has_test_script_and_lockfile(c, lockfile), f"{name} test"
-    )
-
-
-npm = build_js_matcher("npm", "package-lock.json")
-yarn = build_js_matcher("yarn", "yarn.lock")
-pnpm = build_js_matcher("pnpm", "pnpm-lock.yaml")
+npm = Matcher.js_builder("npm", "package-lock.json")
+yarn = Matcher.js_builder("yarn", "yarn.lock")
+pnpm = Matcher.js_builder("pnpm", "pnpm-lock.yaml")
 
 # TODO:
 # - ruby?
 
 # misc simple cases
-pytest = Matcher.basic("pytest", ".pytest_cache", "pytest")
-py = Matcher.basic("py", "tests.py", "python tests.py")
-elixir = Matcher.basic("elixir", "mix.exs", "mix test")
-rust = Matcher.basic("rust", "Cargo.toml", "cargo test")
-clojure = Matcher.basic("clojure", "project.clj", "lein test")
+pytest = Matcher.basic_builder("pytest", ".pytest_cache", "pytest")
+py = Matcher.basic_builder("py", "tests.py", "python tests.py")
+elixir = Matcher.basic_builder("elixir", "mix.exs", "mix test")
+rust = Matcher.basic_builder("rust", "Cargo.toml", "cargo test")
+clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
 
 # these are checked in order
 ALL_MATCHERS: list[Matcher] = [

@@ -47,3 +47,10 @@ class Context:
 
     def has_files(self, *filenames: str) -> bool:
         return bool(self.files) and all(f in self.files for f in filenames)
+
+    def has_test_script_and_lockfile(self, lockfile: str) -> bool:
+        if not self.has_files("package.json", lockfile):
+            return False
+
+        pkg = self.read_json("package.json")
+        return bool(pkg.get("scripts", {}).get("test"))

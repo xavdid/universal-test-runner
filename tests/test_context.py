@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -63,3 +64,48 @@ def test_load_json_uses_cache(tmp_path: Path):
 )
 def test_has_files(files: list[str], looking: list[str], expected: bool):
     assert Context.from_strings(files).has_files(*looking) == expected
+
+
+NO_SCRIPTS = {"scripts": {"build": "tsc", "validate": "yarn"}}
+SCRIPTS = {"scripts": {"build": "tsc", "test": "yarn"}}
+
+
+@pytest.mark.parametrize(
+    ["files", "lockfile", "data", "expected"],
+    [
+        (
+            ["package.json", "package-lock.json"],
+            "package-lock.json",
+            SCRIPTS,
+            True,
+        ),
+        (
+            ["package.json"],
+            "package-lock.json",
+            NO_SCRIPTS,
+            False,
+        ),
+        (
+            ["package.json", "yarn.lock"],
+            "yarn.lock",
+            SCRIPTS,
+            True,
+        ),
+        (["package.json"], "yarn.lock", NO_SCRIPTS, False),
+        (
+            ["package.json", "pnpm-lock.yaml"],
+            "pnpm-lock.yaml",
+            SCRIPTS,
+            True,
+        ),
+        (["package.json"], "pnpm-lock.yaml", NO_SCRIPTS, False),
+        ([], "pnpm-lock.yaml", NO_SCRIPTS, False),
+    ],
+)
+def test_has_test_script_and_lockfile(
+    files: list[str], lockfile: str, data, expected, tmp_path: Path
+):
+    c = Context([tmp_path / p for p in files], [])
+    (tmp_path / "package.json").write_text(json.dumps(data))
+
+    assert c.has_test_script_and_lockfile(lockfile) == expected
