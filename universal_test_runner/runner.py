@@ -17,6 +17,8 @@ def run_test_command(context: Context) -> int:
         try:
             return subprocess.run(command).returncode
         except FileNotFoundError:
+            # e.g. if `pytest` is run, but not installed
+            # we capture the error so there's not a Python traceback shown
             print("command not found:", command[0])
             return 1
     else:
@@ -25,13 +27,12 @@ def run_test_command(context: Context) -> int:
 
 
 def run():
-    # Get the current directory
     current_dir = os.getcwd()
 
     c = Context(
-        # makes the file list deterministic
+        # sorting makes the file list deterministic
         sorted(Path(current_dir).iterdir()),
-        # Pass any arguments to the test runner through to the test command
+        # pass any arguments to the test runner through to the test command
         sys.argv[1:],
     )
 

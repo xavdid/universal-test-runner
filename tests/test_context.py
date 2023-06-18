@@ -62,5 +62,4 @@ def test_load_json_uses_cache(tmp_path: Path):
     ids=repr,
 )
 def test_has_files(files: list[str], looking: list[str], expected: bool):
-    print(files)
     assert Context.from_strings(files).has_files(*looking) == expected

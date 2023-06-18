@@ -15,6 +15,9 @@ class Context:
     _file_cache: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self):
+        # mapping of name to full path, so I can both:
+        # - check if a file exists quickly
+        # - access the path object for reading
         self.files = {p.name: p for p in self.paths}
 
     @staticmethod
@@ -29,7 +32,6 @@ class Context:
     # @cache
     def _load_file(self, filename: str) -> str:
         if filename in self._file_cache:
-            print("cache hit")
             return self._file_cache[filename]
 
         text = self.files[filename].read_text()
@@ -41,7 +43,6 @@ class Context:
         return self._load_file(filename).splitlines()
 
     def read_json(self, filename: str):
-        print("reading", filename)
         return json.loads(self._load_file(filename))
 
     def has_files(self, *filenames: str) -> bool:

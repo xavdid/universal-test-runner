@@ -7,7 +7,7 @@ from universal_test_runner.context import Context
 # TODO: add user-enableable debug logs
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True)  # frozen so I can hash them for tests
 class Matcher:
     name: str
     matches: Callable[[Context], Optional[bool]]
