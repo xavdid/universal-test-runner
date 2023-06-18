@@ -1,6 +1,6 @@
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -134,37 +134,46 @@ def test_has_no__scripts():
     assert not matchers.has_test_script({})
 
 
+no_scripts = {}
+scripts = {"scripts": {"build": "tsc", "test": "yarn"}}
+
+
 @pytest.mark.parametrize(
-    ["c", "lockfile", "expected"],
+    ["files", "lockfile", "data", "expected"],
     [
         (
-            Context.from_strings(["package.json", "package-lock.json"]),
+            ["package.json", "package-lock.json"],
             "package-lock.json",
+            scripts,
             True,
         ),
-        (Context.from_strings(["package.json"]), "package-lock.json", False),
         (
-            Context.from_strings(["package.json", "yarn.lock"]),
+            ["package.json"],
+            "package-lock.json",
+            no_scripts,
+            False,
+        ),
+        (
+            ["package.json", "yarn.lock"],
             "yarn.lock",
+            scripts,
             True,
         ),
-        (Context.from_strings(["package.json"]), "yarn.lock", False),
+        (["package.json"], "yarn.lock", no_scripts, False),
         (
-            Context.from_strings(["package.json", "pnpm-lock.yaml"]),
+            ["package.json", "pnpm-lock.yaml"],
             "pnpm-lock.yaml",
+            scripts,
             True,
         ),
-        (Context.from_strings(["package.json"]), "pnpm-lock.yaml", False),
-        (Context.from_strings([]), "pnpm-lock.yaml", False),
+        (["package.json"], "pnpm-lock.yaml", no_scripts, False),
+        ([], "pnpm-lock.yaml", no_scripts, False),
     ],
 )
-@patch("pathlib.Path.read_text")
 def test_has_test_script_and_lockfile(
-    mock_read: Mock, c: Context, lockfile: str, expected
+    files: list[str], lockfile: str, data, expected, tmp_path: Path
 ):
-    if expected:
-        mock_read.return_value = '{"scripts": {"build": "tsc", "test": "yarn"}}'
-    else:
-        mock_read.return_value = "{}"
+    c = Context([tmp_path / p for p in files], [])
+    (tmp_path / "package.json").write_text(json.dumps(data))
 
     assert matchers.has_test_script_and_lockfile(c, lockfile) == expected
