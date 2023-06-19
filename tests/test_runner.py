@@ -76,7 +76,6 @@ def test_run(
     mock_runner: Mock,
     mock_exit: Mock,
     tmp_path: Path,
-    build_context: ContextBuilderFunc,
     touch_files,
 ):
     files = ["x.py", "y.py", "z.py"]

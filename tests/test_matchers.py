@@ -1,12 +1,9 @@
-import json
 from dataclasses import dataclass, field
-from pathlib import Path
 
 import pytest
 
 import universal_test_runner.matchers as matchers
 from tests.conftest import ContextBuilderFunc, FileWriterFunc
-from universal_test_runner.context import Context
 
 matcher_funcs = [
     export

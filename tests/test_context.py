@@ -1,11 +1,9 @@
 import json
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
 from tests.conftest import ContextBuilderFunc, FileWriterFunc
-from universal_test_runner.context import Context
 
 
 def test_builder(build_context: ContextBuilderFunc, tmp_path):

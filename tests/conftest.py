@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, Optional, Protocol
+from typing import Optional, Protocol
 
 import pytest
 
