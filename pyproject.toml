@@ -14,11 +14,11 @@ classifiers = [
   "Environment :: Console",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
-  "Natural Language :: English",
+  "Topic :: Software Development :: Testing",
 ]
-keywords = ["testing"]
+keywords = ["testing", "test-runner", "pytest"]
 
-dependencies = []
+dependencies = ["click==8.1.3"]
 
 [project.optional-dependencies]
 test = ["pytest==7.3.1", "responses==0.23.1", "pyright==1.1.309"]
@@ -32,6 +32,7 @@ release = ["twine==4.0.2", "build==0.10.0"]
 
 [project.scripts]
 t = "universal_test_runner.runner:run"
+universal-test-runner = "universal_test_runner.cli:cli"
 
 [build-system]
 requires = ["flit_core>=3.4"]
