@@ -4,7 +4,7 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 
 ## 0.3.0
 
-_released `TBD`_
+_released `2023-06-19`_
 
 - add a `universal-test-runner` command which has info about the package. The main test runner still lives in `t`.
 - add the `universal-test-runner debug` command to print an explanation of why a certain test runner is chosen
