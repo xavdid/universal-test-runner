@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
 
 from tests.conftest import ContextBuilderFunc, FileWriterFunc
+from universal_test_runner.context import Context
 
 
 def test_builder(build_context: ContextBuilderFunc, tmp_path):
@@ -12,6 +14,24 @@ def test_builder(build_context: ContextBuilderFunc, tmp_path):
     assert c.cwd == str(tmp_path)
     assert c.filenames == frozenset("abc")
     assert c.args == ("q", "-w", "--cool")
+
+
+@patch("sys.argv", new=["test-runner", "q", "-w", "--cool"])
+@patch("os.getcwd")
+@pytest.mark.parametrize("debugging", [True, False])
+def test_invocation_builder(
+    mock_cwd: Mock, tmp_path: Path, touch_files, debugging: bool
+):
+    mock_cwd.return_value = str(tmp_path)
+
+    touch_files(["a.txt", "b.txt"])
+
+    c = Context.from_invocation(debugging=debugging)
+
+    assert c.cwd == str(tmp_path)
+    assert c.args == ("q", "-w", "--cool")
+    assert c.filenames == frozenset(["a.txt", "b.txt"])
+    assert c.debugging == debugging
 
 
 def test_read_file_uses_cache(build_context: ContextBuilderFunc, tmp_path: Path):
@@ -112,3 +132,22 @@ def test_has_test_script_and_lockfile(
     c = build_context(files)
 
     assert c.has_test_script_and_lockfile(lockfile) == expected
+
+
+def test_debugging(capsys, build_context: ContextBuilderFunc):
+    c = build_context(debugging=True)
+    c.debug("neat")
+    c.debug("cool", indent=3)
+
+    out, _ = capsys.readouterr()
+    assert "neat" in out
+    assert ":    cool" in out
+
+
+def test_debugging_is_disableable(capsys, build_context: ContextBuilderFunc):
+    c = build_context(debugging=False)
+    c.debug("neat")
+    c.debug("cool", indent=3)
+
+    out, _ = capsys.readouterr()
+    assert out == ""

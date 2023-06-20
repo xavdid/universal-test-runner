@@ -22,7 +22,7 @@ pipx install universal-test-runner
 
 ## Usage
 
-Once installed, the command `t` will be available. Run that in a folder with tests and it'll do its best to run your unit tests.
+Once installed, the command `t` will be available. Run that in a folder with tests and it'll do its best to run your unit tests:
 
 ```
 % t
@@ -37,7 +37,16 @@ tests/test_runner.py ............                         [100%]
 ====================== 37 passed in 0.04s =======================
 ```
 
+It passes all arguments and environment modifications down to the chosen test runner.
+
 If it can't guess the testing method, it will tell you so. Feel free to open an issue to request wider language support!
+
+### Debugging
+
+The package also ships a program to surface info about itself: `universal-test-runner`. It has a few key pieces of functionality:
+
+- the `universal-test-runner --version` flag, which prints info about your installed package version
+- the `universal-test-runner debug` command, which prints info about which matcher would run (and why)
 
 ## Supported Languages
 

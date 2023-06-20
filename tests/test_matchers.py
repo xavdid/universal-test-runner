@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass, field
 
 import pytest
@@ -120,3 +121,74 @@ def test_makefile(
     c = build_context()
 
     assert matchers.makefile.matches(c) == expected
+
+
+@dataclass
+class CommandFinderTestCase:
+    files: list[str]
+    expected_command: str
+    args: list[str] = field(default_factory=list)
+
+    def __repr__(self) -> str:
+        return f"files={self.files} & args={self.args} -> `{self.expected_command}`"
+
+
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        CommandFinderTestCase([".pytest_cache"], "pytest"),
+        CommandFinderTestCase(["tests.py"], "python tests.py"),
+        CommandFinderTestCase(["go.mod"], "go test ./..."),
+        CommandFinderTestCase(
+            ["go.mod"], args=["parser"], expected_command="go test parser"
+        ),
+        CommandFinderTestCase(["parser_test.go"], "go test"),
+        CommandFinderTestCase(
+            ["parser_test.go"], args=["-v"], expected_command="go test -v"
+        ),
+        CommandFinderTestCase(["mix.exs"], "mix test"),
+        CommandFinderTestCase(["Cargo.toml"], "cargo test"),
+        CommandFinderTestCase(["project.clj"], "lein test"),
+        CommandFinderTestCase([], ""),
+    ],
+    ids=repr,
+)
+def test_find_test_command(
+    test_case: CommandFinderTestCase, build_context: ContextBuilderFunc
+):
+    """
+    while other tests verify that a specific file passes a specific matcher,
+    this makes assertions about the resulting command while running through the entire matching process
+    """
+    c = build_context(test_case.files, test_case.args)
+    assert matchers.find_test_command(c) == test_case.expected_command.split()
+
+
+def test_find_test_command_makefile(
+    build_context: ContextBuilderFunc, write_file: FileWriterFunc
+):
+    write_file("Makefile", "test: cool")
+    c = build_context(["Makefile"])
+    assert matchers.find_test_command(c) == ["make", "test"]
+
+
+@pytest.mark.parametrize(
+    ["lockfile", "command"],
+    [
+        ("package-lock.json", "npm"),
+        ("yarn.lock", "yarn"),
+        ("pnpm-lock.yaml", "pnpm"),
+    ],
+)
+def test_find_test_command_pkgjson(
+    lockfile: str,
+    command: str,
+    build_context: ContextBuilderFunc,
+    write_file: FileWriterFunc,
+):
+    write_file(
+        "package.json", json.dumps({"name": "whatever", "scripts": {"test": "ok"}})
+    )
+
+    c = build_context([lockfile])
+    assert matchers.find_test_command(c) == [command, "test"]

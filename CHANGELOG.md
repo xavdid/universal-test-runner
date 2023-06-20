@@ -7,6 +7,7 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 _released `TBD`_
 
 - add a `universal-test-runner` command which has info about the package. The main test runner still lives in `t`.
+- add the `universal-test-runner debug` command to print an explanation of why a certain test runner is chosen
 - remove custom file caching logic
 
 ## 0.2.0

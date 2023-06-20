@@ -1,5 +1,7 @@
 import json
-from dataclasses import dataclass
+import os
+import sys
+from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 
@@ -9,10 +11,26 @@ class Context:
     cwd: str
     filenames: frozenset[str]
     args: tuple[str, ...]
+    debugging: bool = field(compare=False, default=False)
 
     @staticmethod
-    def build(cwd: str, args: list[str]):
-        return Context(cwd, frozenset(p.name for p in Path(cwd).iterdir()), tuple(args))
+    def build(cwd: str, args: list[str], debugging: bool = False):
+        """
+        does the transforming of typical inputs into the data the context actually needs
+        """
+        return Context(
+            cwd,
+            frozenset(p.name for p in Path(cwd).iterdir()),
+            tuple(args),
+            debugging=debugging,
+        )
+
+    @staticmethod
+    def from_invocation(debugging: bool = False):
+        """
+        used by the CLI to auto-capture info about the working directory
+        """
+        return Context.build(os.getcwd(), sys.argv[1:], debugging=debugging)
 
     @cache
     def _load_file(self, filename: str) -> str:
@@ -33,3 +51,9 @@ class Context:
 
         pkg = self.read_json("package.json")
         return bool(pkg.get("scripts", {}).get("test"))
+
+    def debug(self, message: str, indent=0):
+        if not self.debugging or not message:
+            return
+
+        print(f"[universal-test-runner]: {' '*indent}{message}")

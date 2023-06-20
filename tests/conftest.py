@@ -19,16 +19,21 @@ def touch_files(tmp_path: Path):
 
 class ContextBuilderFunc(Protocol):
     def __call__(
-        self, files: OptionalStrList = None, args: OptionalStrList = None
+        self,
+        files: OptionalStrList = None,
+        args: OptionalStrList = None,
+        debugging=False,
     ) -> Context:
         ...
 
 
 @pytest.fixture
 def build_context(tmp_path: Path, touch_files) -> ContextBuilderFunc:
-    def _build(files: OptionalStrList = None, args: OptionalStrList = None):
+    def _build(
+        files: OptionalStrList = None, args: OptionalStrList = None, debugging=False
+    ):
         touch_files(files or [])
-        return Context.build(str(tmp_path), args or [])
+        return Context.build(str(tmp_path), args or [], debugging=debugging)
 
     return _build
 
