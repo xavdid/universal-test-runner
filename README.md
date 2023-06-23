@@ -14,7 +14,7 @@ Currently [supports 7 languages](#supported-languages) (and their respective tes
 
 ## Installation
 
-Universal Test Runner is available on PyPi (for installation via [pipx](https://pypa.github.io/pipx/)):
+Universal Test Runner is available on [PyPi](https://pypi.org/project/universal-test-runner/) (for installation via [pipx](https://pypa.github.io/pipx/)):
 
 ```bash
 pipx install universal-test-runner
