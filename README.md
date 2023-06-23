@@ -22,6 +22,8 @@ pipx install universal-test-runner
 
 ## Usage
 
+> You can also clone the [demo repo](https://github.com/xavdid/test-runner-demo) to play around with the test runner - it's got toy examples to show how tests are run in many languages!
+
 Once installed, the command `t` will be available. Run it in a project folder's root and it'll do its best to run your unit tests:
 
 ```
