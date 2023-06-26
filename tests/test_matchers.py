@@ -30,6 +30,7 @@ def test_export():
 simple_command_tests = [
     (matchers.pytest, ["pytest"]),
     (matchers.py, ["python", "tests.py"]),
+    (matchers.django, ["./manage.py", "test"]),
     (matchers.go_single, ["go", "test"]),
     (matchers.go_multi, ["go", "test", "./..."]),
     (matchers.elixir, ["mix", "test"]),
@@ -45,13 +46,13 @@ simple_command_tests = [
 def test_all_matchers_have_simple_command_test():
     assert len(simple_command_tests) == len(
         matcher_funcs
-    ), "a matcher is missing its simple command test"
+    ), "a matcher is missing from simple_command_tests"
 
 
 @pytest.mark.parametrize(
     ["matcher", "result"],
     simple_command_tests,
-    ids=lambda p: repr(p) if isinstance(p, matchers.Matcher) else None,
+    ids=[repr(m[0]) for m in simple_command_tests],
 )
 def test_simple_commands(matcher: matchers.Matcher, result: list[str]):
     """
@@ -84,6 +85,7 @@ class MatcherTestCase:
         # simple cases
         MatcherTestCase(matchers.pytest, [".pytest_cache"]),
         MatcherTestCase(matchers.py, ["tests.py"]),
+        MatcherTestCase(matchers.django, ["manage.py"]),
         MatcherTestCase(matchers.elixir, ["mix.exs"]),
         MatcherTestCase(matchers.rust, ["Cargo.toml"]),
         MatcherTestCase(matchers.clojure, ["project.clj"]),
@@ -97,6 +99,9 @@ class MatcherTestCase:
     ids=repr,
 )
 def test_matches(test_case: MatcherTestCase, build_context: ContextBuilderFunc):
+    """
+    a basic assertion to check that a given set of files/args match a specific Matcher (in isolation)
+    """
     context = build_context(test_case.files, test_case.args)
     assert test_case.matcher.matches(context) == test_case.passes
 
