@@ -76,6 +76,7 @@ pnpm = Matcher.js_builder("pnpm", "pnpm-lock.yaml")
 # misc simple cases
 pytest = Matcher.basic_builder("pytest", ".pytest_cache", "pytest")
 py = Matcher.basic_builder("py", "tests.py", "python tests.py")
+django = Matcher.basic_builder("django", "manage.py", "./manage.py test")
 elixir = Matcher.basic_builder("elixir", "mix.exs", "mix test")
 rust = Matcher.basic_builder("rust", "Cargo.toml", "cargo test")
 clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
@@ -83,6 +84,7 @@ clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
 # these are checked in order
 ALL_MATCHERS: list[Matcher] = [
     pytest,
+    django,
     py,
     # ensure ordering here
     go_multi,
