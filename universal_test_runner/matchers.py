@@ -83,10 +83,11 @@ clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
 
 # these are checked in order
 ALL_MATCHERS: list[Matcher] = [
-    pytest,
+    # make sure django goes before pytest, since django can use pytest
     django,
+    pytest,
     py,
-    # ensure ordering here
+    # ensure ordering for go matchers
     go_multi,
     go_single,
     elixir,

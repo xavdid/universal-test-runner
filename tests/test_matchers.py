@@ -142,6 +142,8 @@ class CommandFinderTestCase:
     "test_case",
     [
         CommandFinderTestCase([".pytest_cache"], "pytest"),
+        CommandFinderTestCase(["manage.py"], "./manage.py test"),
+        CommandFinderTestCase(["manage.py", ".pytest_cache"], "./manage.py test"),
         CommandFinderTestCase(["tests.py"], "python tests.py"),
         CommandFinderTestCase(["go.mod"], "go test ./..."),
         CommandFinderTestCase(
@@ -164,6 +166,8 @@ def test_find_test_command(
     """
     while other tests verify that a specific file passes a specific matcher,
     this makes assertions about the resulting command while running through the entire matching process
+
+    it's useful for ensuring ordering of certain matchers
     """
     c = build_context(test_case.files, test_case.args)
     assert matchers.find_test_command(c) == test_case.expected_command.split()

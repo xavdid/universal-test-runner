@@ -92,8 +92,11 @@ The package also ships a command to surface info about itself: `universal-test-r
 
 ## Supported Languages
 
+This tree describes the rough priority order within each language (not the languages themselves).
+
 1. Python
-   - uses `pytest` if you've run `pytest` before. You'll need to run pytest manually on clean installs before `t` will work
+   - checks for `manage.py` (Django)
+   - else uses `pytest` if you've run `pytest` before. You'll need to run pytest manually on clean installs before `t` will work
    - looks for a `tests.py` file if not
 2. Rust
    - `cargo test`
