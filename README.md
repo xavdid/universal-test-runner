@@ -28,6 +28,7 @@ Once installed, the command `t` will be available. Run it in a project folder's 
 
 ```
 % t
+-> pytest
 =============================== test session starts ================================
 platform darwin -- Python 3.11.0, pytest-7.3.1, pluggy-1.0.0
 rootdir: /Users/username/projects/test-runner
@@ -45,6 +46,7 @@ It passes all arguments and environment modifications down to the chosen test ru
 
 ```
 % t -k test_builder --verbose
+-> pytest -k test_builder --verbose
 =============================== test session starts ================================
 platform darwin -- Python 3.11.0, pytest-7.3.1, pluggy-1.0.0
 cachedir: .pytest_cache
@@ -55,6 +57,8 @@ tests/test_context.py::test_builder PASSED                                   [10
 
 ========================= 1 passed, 77 deselected in 0.03s =========================
 ```
+
+It prints the command it's running as part of the output. To disable that behavior, set `UTR_DISABLE_ECHO` to any value in the environment.
 
 If it can't guess the testing method, it will tell you so. Feel free to open an issue to request wider language support!
 
