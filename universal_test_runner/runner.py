@@ -1,5 +1,8 @@
+import os
 import subprocess
 import sys
+
+from colorama import Style, just_fix_windows_console
 
 from universal_test_runner.context import Context
 from universal_test_runner.matchers import find_test_command
@@ -10,6 +13,9 @@ def run_test_command(command: list[str]) -> int:
         print("no testing method found!")
         return 1
 
+    if "UTR_DISABLE_ECHO" not in os.environ:
+        just_fix_windows_console()
+        print(Style.DIM + "-> " + " ".join(command) + Style.RESET_ALL)
     try:
         return subprocess.run(command).returncode
     except FileNotFoundError:

@@ -7,6 +7,7 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 _released `TBD`_
 
 - add django support (https://github.com/xavdid/universal-test-runner/pull/1)
+- print the command being run; disable by setting `UTR_DISABLE_ECHO` in the environment ()
 
 ## 0.3.0
 
