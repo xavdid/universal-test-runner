@@ -10,6 +10,9 @@ _require-venv:
 test *options:
     pytest {{options}}
 
+@tox:
+    tox -p
+
 @lint:
     isort --check --quiet .
     black --check --quiet .
@@ -23,9 +26,7 @@ test *options:
     pyright -p pyproject.toml
 
 # perform all checks, but don't change any files
-@validate: test lint typecheck
-
-@local: _require-venv validate
+@validate: tox lint typecheck
 
 # run the full ci pipeline
 ci: && validate
