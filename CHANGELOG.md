@@ -7,6 +7,7 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 _released `TBD`_
 
 - add django support (https://github.com/xavdid/universal-test-runner/pull/1) and ensure it takes precedence over more generic python testing methods ([223d709](https://github.com/xavdid/universal-test-runner/commit/223d709e17882d56c6efcaa42e07c4bb300f1742))
+- add [justfile](https://github.com/casey/just) support. Make sure your `test` recipe [accepts arguments]() ()
 - print the command being run; disable by setting `UTR_DISABLE_ECHO` in the environment (https://github.com/xavdid/universal-test-runner/pull/2)
 
 ## 0.3.0

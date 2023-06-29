@@ -66,6 +66,19 @@ makefile = Matcher(
     debug_line='looking for: a "Makefile" and a "test:" line',
 )
 
+justfile = Matcher(
+    "justfile",
+    # TODO: better capitalization support? the file is supposed to be case-insensitive
+    lambda c: c.has_files("justfile")
+    # TODO: maybe use the JSON interface once https://github.com/casey/just/issues/1632 is closed
+    # less guessing that way
+    and any(
+        l.startswith("test") or l.startswith("@test") for l in c.read_file("justfile")
+    ),
+    "just test",
+    debug_line='looking for: a "justfile" and a "test" or "@test" line',
+)
+
 npm = Matcher.js_builder("npm", "package-lock.json")
 yarn = Matcher.js_builder("yarn", "yarn.lock")
 pnpm = Matcher.js_builder("pnpm", "pnpm-lock.yaml")
@@ -83,7 +96,10 @@ clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
 
 # these are checked in order
 ALL_MATCHERS: list[Matcher] = [
+    justfile,
+    makefile,
     # make sure django goes before pytest, since django can use pytest
+    # (there's a test to confirm this behavior)
     django,
     pytest,
     py,
@@ -96,7 +112,6 @@ ALL_MATCHERS: list[Matcher] = [
     npm,
     yarn,
     pnpm,
-    makefile,
 ]
 
 NUM_MATCHERS = len(ALL_MATCHERS)
