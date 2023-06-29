@@ -70,8 +70,7 @@ justfile = Matcher(
     "justfile",
     # TODO: better capitalization support? the file is supposed to be case-insensitive
     lambda c: c.has_files("justfile")
-    # TODO: maybe use the JSON interface once https://github.com/casey/just/issues/1632 is closed
-    # less guessing that way
+    # TODO: maybe use the JSON interface once https://github.com/casey/just/issues/1632 is closed?
     and any(
         l.startswith("test") or l.startswith("@test") for l in c.read_file("justfile")
     ),

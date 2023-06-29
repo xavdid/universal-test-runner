@@ -42,9 +42,8 @@ class Context:
     def read_json(self, filename: str):
         return json.loads(self._load_file(filename))
 
-    def has_files(self, *filenames: str, match_any=False) -> bool:
-        func = any if match_any else all
-        return bool(self.filenames) and func(f in self.filenames for f in filenames)
+    def has_files(self, *filenames: str) -> bool:
+        return bool(self.filenames) and all(f in self.filenames for f in filenames)
 
     def has_test_script_and_lockfile(self, lockfile: str) -> bool:
         if not self.has_files("package.json", lockfile):
