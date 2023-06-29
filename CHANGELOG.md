@@ -6,8 +6,11 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 
 _released `TBD`_
 
+- :exclamation: BREAKING: prioritize `Makefile` (and `justfile`) over running any tools directly. ([#3](https://github.com/xavdid/universal-test-runner/pull/3))
+  - This is likely a non-issue unless you have a `Makefile` _and_ an already-supported language and preferred circumventing `make`
+  - in that case, use a recipe name besides `test`
 - add django support (https://github.com/xavdid/universal-test-runner/pull/1) and ensure it takes precedence over more generic python testing methods ([223d709](https://github.com/xavdid/universal-test-runner/commit/223d709e17882d56c6efcaa42e07c4bb300f1742))
-- add [justfile](https://github.com/casey/just) support. Make sure your `test` recipe [accepts arguments]() ()
+- add [justfile](https://github.com/casey/just) support. Make sure your `test` recipe [accepts arguments](https://github.com/xavdid/universal-test-runner#just-errors-when-passing-cli-args) ([#3](https://github.com/xavdid/universal-test-runner/pull/3))
 - print the command being run; disable by setting `UTR_DISABLE_ECHO` in the environment (https://github.com/xavdid/universal-test-runner/pull/2)
 
 ## 0.3.0

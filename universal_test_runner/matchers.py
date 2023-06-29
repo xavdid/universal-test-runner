@@ -98,8 +98,7 @@ clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
 ALL_MATCHERS: list[Matcher] = [
     justfile,
     makefile,
-    # make sure django goes before pytest, since django can use pytest
-    # (there's a test to confirm this behavior)
+    # anything that could run pytest should go before it
     django,
     pytest,
     py,
