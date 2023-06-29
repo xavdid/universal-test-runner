@@ -40,6 +40,7 @@ simple_command_tests = [
     (matchers.npm, ["npm", "test"]),
     (matchers.yarn, ["yarn", "test"]),
     (matchers.pnpm, ["pnpm", "test"]),
+    (matchers.justfile, ["just", "test"]),
 ]
 
 
@@ -95,6 +96,7 @@ class MatcherTestCase:
         MatcherTestCase(matchers.go_multi, ["go.mod"], args=["whatever"], passes=False),
         MatcherTestCase(matchers.go_single, ["go.mod"], args=["token"]),
         MatcherTestCase(matchers.go_single, ["parser_test.go"]),
+        MatcherTestCase(matchers.justfile, ["Justfile"], passes=False),
     ],
     ids=repr,
 )
@@ -128,11 +130,46 @@ def test_makefile(
     assert matchers.makefile.matches(c) == expected
 
 
+@pytest.mark.parametrize(
+    ["text", "expected"],
+    [
+        (
+            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\nvalidate *options:\n    pytest {{options}}",
+            False,
+        ),
+        (
+            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\ntest *options:\n    pytest {{options}}",
+            True,
+        ),
+        (
+            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\ntest:\n    pytest {{options}}",
+            True,
+        ),
+        (
+            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\n@test *options:\n    pytest {{options}}",
+            True,
+        ),
+        (
+            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\n@test:\n    pytest {{options}}",
+            True,
+        ),
+    ],
+)
+def test_justfile(
+    text, expected, write_file: FileWriterFunc, build_context: ContextBuilderFunc
+):
+    write_file("justfile", text)
+    c = build_context()
+
+    assert matchers.justfile.matches(c) == expected
+
+
 @dataclass
 class CommandFinderTestCase:
     files: list[str]
     expected_command: str
     args: list[str] = field(default_factory=list)
+    file_contents: list[tuple[str, str]] = field(default_factory=list)
 
     def __repr__(self) -> str:
         return f"files={self.files} & args={self.args} -> `{self.expected_command}`"
@@ -141,6 +178,7 @@ class CommandFinderTestCase:
 @pytest.mark.parametrize(
     "test_case",
     [
+        CommandFinderTestCase([".pytest_cache"], "pytest"),
         CommandFinderTestCase([".pytest_cache"], "pytest"),
         CommandFinderTestCase(["manage.py"], "./manage.py test"),
         CommandFinderTestCase(["manage.py", ".pytest_cache"], "./manage.py test"),
@@ -157,11 +195,75 @@ class CommandFinderTestCase:
         CommandFinderTestCase(["Cargo.toml"], "cargo test"),
         CommandFinderTestCase(["project.clj"], "lein test"),
         CommandFinderTestCase([], ""),
+        # basic content tests
+        CommandFinderTestCase(
+            [], "make test", file_contents=[("Makefile", "test: cool")]
+        ),
+        CommandFinderTestCase(
+            [], "just test", file_contents=[("justfile", "test:\ncool")]
+        ),
+        # js matches based on script and lockfile
+        *[
+            CommandFinderTestCase(
+                [lockfile],
+                f"{cmd} test",
+                file_contents=[
+                    (
+                        "package.json",
+                        json.dumps({"name": "whatever", "scripts": {"test": "ok"}}),
+                    )
+                ],
+            )
+            for lockfile, cmd in [
+                ("package-lock.json", "npm"),
+                ("yarn.lock", "yarn"),
+                ("pnpm-lock.yaml", "pnpm"),
+            ]
+        ],
+        # no match without the script
+        *[
+            CommandFinderTestCase(
+                [lockfile],
+                "",
+                file_contents=[
+                    (
+                        "package.json",
+                        json.dumps({"name": "whatever", "scripts": {"xtest": "ok"}}),
+                    )
+                ],
+            )
+            for lockfile in ["package-lock.json", "yarn.lock", "pnpm-lock.yaml"]
+        ],
+        # if a task runner runs pytest, defer to the runner
+        CommandFinderTestCase(
+            [".pytest_cache"], "make test", file_contents=[("Makefile", "test: cool")]
+        ),
+        CommandFinderTestCase(
+            [".pytest_cache"], "just test", file_contents=[("justfile", "test:\ncool")]
+        ),
+        CommandFinderTestCase([".pytest_cache", "manage.py"], "./manage.py test"),
+        CommandFinderTestCase(
+            [".pytest_cache", "manage.py"],
+            "just test",
+            file_contents=[("justfile", "test:\ncool")],
+        ),
+        CommandFinderTestCase(
+            [".pytest_cache", "manage.py"],
+            "./manage.py test",
+            file_contents=[("justfile", "xtest:\ncool")],
+        ),
+        CommandFinderTestCase(
+            [".pytest_cache", "manage.py"],
+            "make test",
+            file_contents=[("Makefile", "test:\ncool")],
+        ),
     ],
     ids=repr,
 )
 def test_find_test_command(
-    test_case: CommandFinderTestCase, build_context: ContextBuilderFunc
+    test_case: CommandFinderTestCase,
+    build_context: ContextBuilderFunc,
+    write_file: FileWriterFunc,
 ):
     """
     while other tests verify that a specific file passes a specific matcher,
@@ -169,35 +271,8 @@ def test_find_test_command(
 
     it's useful for ensuring ordering of certain matchers
     """
+    for f in test_case.file_contents:
+        write_file(*f)
+
     c = build_context(test_case.files, test_case.args)
     assert matchers.find_test_command(c) == test_case.expected_command.split()
-
-
-def test_find_test_command_makefile(
-    build_context: ContextBuilderFunc, write_file: FileWriterFunc
-):
-    write_file("Makefile", "test: cool")
-    c = build_context(["Makefile"])
-    assert matchers.find_test_command(c) == ["make", "test"]
-
-
-@pytest.mark.parametrize(
-    ["lockfile", "command"],
-    [
-        ("package-lock.json", "npm"),
-        ("yarn.lock", "yarn"),
-        ("pnpm-lock.yaml", "pnpm"),
-    ],
-)
-def test_find_test_command_pkgjson(
-    lockfile: str,
-    command: str,
-    build_context: ContextBuilderFunc,
-    write_file: FileWriterFunc,
-):
-    write_file(
-        "package.json", json.dumps({"name": "whatever", "scripts": {"test": "ok"}})
-    )
-
-    c = build_context([lockfile])
-    assert matchers.find_test_command(c) == [command, "test"]

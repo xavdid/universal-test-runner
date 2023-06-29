@@ -126,6 +126,23 @@ I work in a few languages at a time, so I've actually had a [version of this in 
 2. It should pass all arguments through to the underlying test command
 3. It should have wide language and test runner support; please open an issue if your use case isn't supported!
 
+## FAQ
+
+### `just` errors when passing CLI args
+
+If you run with args (like `t -k matcher`) and see an error from `just` like:
+
+```
+error: Justfile does not contain recipes `-k` or `matcher`.
+```
+
+That means your `test` recipe doesn't accept any options. Make sure it has an `*options` arg that you pass through to your test command:
+
+```makefile
+test *options:
+    pytest {{options}}
+```
+
 ## Development
 
 This section is people making changes to this package.
