@@ -133,27 +133,15 @@ def test_makefile(
 @pytest.mark.parametrize(
     ["text", "expected"],
     [
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\nvalidate *options:\n    pytest {{options}}",
-            False,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\ntest *options:\n    pytest {{options}}",
-            True,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\ntest:\n    pytest {{options}}",
-            True,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\n@test *options:\n    pytest {{options}}",
-            True,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\n@test:\n    pytest {{options}}",
-            True,
-        ),
+        ("validate *options:\n    pytest {{options}}", False),
+        ("test *options:\n    pytest {{options}}", True),
+        ("test:\n    pytest", True),
+        ("@test *options:\n    pytest {{options}}", True),
+        ("@test:\n    pytest", True),
+        ("@testacular *options:\n    pytest {{options}}", False),
+        ("@testacular:\n    pytest", False),
     ],
+    ids=[],
 )
 def test_justfile(
     text, expected, write_file: FileWriterFunc, build_context: ContextBuilderFunc
@@ -172,7 +160,7 @@ class CommandFinderTestCase:
     file_contents: list[tuple[str, str]] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        return f"files={self.files} & args={self.args} -> `{self.expected_command}`"
+        return f"files={self.files}+{[name for name,_ in self.file_contents]} & args={self.args} -> `{self.expected_command}`"
 
 
 @pytest.mark.parametrize(
@@ -200,7 +188,7 @@ class CommandFinderTestCase:
             [], "make test", file_contents=[("Makefile", "test: cool")]
         ),
         CommandFinderTestCase(
-            [], "just test", file_contents=[("justfile", "test:\ncool")]
+            [], "just test", file_contents=[("justfile", "test:\n  cool")]
         ),
         # js matches based on script and lockfile
         *[
@@ -239,23 +227,25 @@ class CommandFinderTestCase:
             [".pytest_cache"], "make test", file_contents=[("Makefile", "test: cool")]
         ),
         CommandFinderTestCase(
-            [".pytest_cache"], "just test", file_contents=[("justfile", "test:\ncool")]
+            [".pytest_cache"],
+            "just test",
+            file_contents=[("justfile", "test:\n  cool")],
         ),
         CommandFinderTestCase([".pytest_cache", "manage.py"], "./manage.py test"),
         CommandFinderTestCase(
             [".pytest_cache", "manage.py"],
             "just test",
-            file_contents=[("justfile", "test:\ncool")],
+            file_contents=[("justfile", "test:\n  cool")],
         ),
         CommandFinderTestCase(
             [".pytest_cache", "manage.py"],
             "./manage.py test",
-            file_contents=[("justfile", "xtest:\ncool")],
+            file_contents=[("justfile", "xtest:\n  cool")],
         ),
         CommandFinderTestCase(
             [".pytest_cache", "manage.py"],
             "make test",
-            file_contents=[("Makefile", "test:\ncool")],
+            file_contents=[("Makefile", "test:\n  cool")],
         ),
     ],
     ids=repr,

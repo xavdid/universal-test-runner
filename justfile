@@ -7,7 +7,7 @@ _require-venv:
     import sys
     sys.exit(sys.prefix == sys.base_prefix)
 
-test *options:
+@test *options:
     pytest {{options}}
 
 @tox:
