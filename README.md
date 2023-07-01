@@ -3,8 +3,8 @@
 The Universal Test Runner is a zero-configuration, language-aware way to run unit tests in any project. It installs a command, `t`, which will determine how to run your test suite (and then run it).
 
 <p align="center">
-   <a href="https://github.com/xavdid/test-runner-demo/raw/main/_demo/demo-min.gif">
-      <img src="https://github.com/xavdid/test-runner-demo/raw/main/_demo/demo-min.gif"/>
+   <a href="https://github.com/xavdid/test-runner-demo/blob/main/_demo/demo-min.gif">
+      <img src="https://raw.githubusercontent.com/xavdid/test-runner-demo/main/_demo/demo-min.gif"/>
    </a>
 </p>
 
