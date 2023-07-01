@@ -34,7 +34,7 @@ class Context:
 
     @cache
     def _load_file(self, filename: str) -> str:
-        return Path(self.cwd, filename).read_text()
+        return Path(self.cwd, filename).read_text("utf-8")
 
     def read_file(self, filename: str) -> list[str]:
         return self._load_file(filename).splitlines()
