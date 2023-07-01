@@ -1,5 +1,7 @@
 import json
+import subprocess
 from dataclasses import dataclass, field
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -73,16 +75,12 @@ class MatcherTestCase:
     def __repr__(self) -> str:
         return f"{self.matcher} w/ files={self.files} & args={self.args} -> `{self.passes}`"
 
-    @staticmethod
-    def failing_case(matcher: matchers.Matcher):
-        return MatcherTestCase(matcher, passes=False)
-
 
 @pytest.mark.parametrize(
     "test_case",
     [
         # each matcher depends on at least one file, so each matcher with no files should not match
-        *[MatcherTestCase.failing_case(m) for m in matchers.ALL_MATCHERS],
+        *[MatcherTestCase(m, passes=False) for m in matchers.ALL_MATCHERS],
         # simple cases
         MatcherTestCase(matchers.pytest, [".pytest_cache"]),
         MatcherTestCase(matchers.py, ["tests.py"]),
@@ -133,35 +131,66 @@ def test_makefile(
 @pytest.mark.parametrize(
     ["text", "expected"],
     [
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\nvalidate *options:\n    pytest {{options}}",
-            False,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\ntest *options:\n    pytest {{options}}",
-            True,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\ntest:\n    pytest {{options}}",
-            True,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\n@test *options:\n    pytest {{options}}",
-            True,
-        ),
-        (
-            "default:\n    just --list\n\n# error out if this isn't being run in a venv\n_require-venv:\n    !/usr/bin/env python\n    import sys\n    sys.exit(sys.prefix == sys.base_prefix)\n\n@test:\n    pytest {{options}}",
-            True,
-        ),
+        ("test *options:\n    pytest {{options}}", True),
+        ("test:\n    pytest", True),
+        ("@test *options:\n    pytest {{options}}", True),
+        ("@test:\n    pytest", True),
+        ("validate:\n    pytest {{options}}", False),
+        ("validate *options:\n    pytest {{options}}", False),
+        ("@validate:\n    pytest {{options}}", False),
+        ("@validate *options:\n    pytest {{options}}", False),
+        ("testacular:\n    pytest", False),
+        ("testacular *options:\n    pytest {{options}}", False),
+        ("@testacular:\n    pytest", False),
+        ("@testacular *options:\n    pytest {{options}}", False),
     ],
 )
-def test_justfile(
-    text, expected, write_file: FileWriterFunc, build_context: ContextBuilderFunc
+@patch("subprocess.run")
+def test_parse_justfile(
+    mock_run: Mock,
+    text,
+    expected,
+    write_file: FileWriterFunc,
+    build_context: ContextBuilderFunc,
 ):
+    """
+    this test is relevant when `just` isn't installed and we're parsing the file manually
+    """
+    mock_run.side_effect = FileNotFoundError()
     write_file("justfile", text)
     c = build_context()
 
     assert matchers.justfile.matches(c) == expected
+
+
+@pytest.mark.parametrize(
+    ["recipe", "expected"], [("test", True), ("validate", False), ("testacular", False)]
+)
+@patch("subprocess.run")
+def test_dump_justfile(
+    mock_run: Mock,
+    justfile_json,
+    recipe: str,
+    expected: bool,
+    build_context: ContextBuilderFunc,
+):
+    mock_run.return_value.stdout = justfile_json(recipe)
+    c = build_context(["justfile"])
+
+    assert matchers.justfile.matches(c) == expected
+
+
+@patch("subprocess.run")
+def test_invalid_justfile(mock_run: Mock, build_context: ContextBuilderFunc):
+    mock_run.side_effect = subprocess.CalledProcessError(1, "invalid justfile!")
+    c = build_context(["justfile"])
+    c._load_file.cache_clear()
+
+    assert matchers.justfile.matches(c) == False
+    # tried to load the file
+    assert c._load_file.cache_info().currsize == 1
+    assert c._load_file.cache_info().hits == 0
+    assert c._load_file.cache_info().misses == 1
 
 
 @dataclass
@@ -172,7 +201,7 @@ class CommandFinderTestCase:
     file_contents: list[tuple[str, str]] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        return f"files={self.files} & args={self.args} -> `{self.expected_command}`"
+        return f"files={self.files}+{[name for name,_ in self.file_contents]} & args={self.args} -> `{self.expected_command}`"
 
 
 @pytest.mark.parametrize(
@@ -198,9 +227,6 @@ class CommandFinderTestCase:
         # basic content tests
         CommandFinderTestCase(
             [], "make test", file_contents=[("Makefile", "test: cool")]
-        ),
-        CommandFinderTestCase(
-            [], "just test", file_contents=[("justfile", "test:\ncool")]
         ),
         # js matches based on script and lockfile
         *[
@@ -239,28 +265,22 @@ class CommandFinderTestCase:
             [".pytest_cache"], "make test", file_contents=[("Makefile", "test: cool")]
         ),
         CommandFinderTestCase(
-            [".pytest_cache"], "just test", file_contents=[("justfile", "test:\ncool")]
-        ),
-        CommandFinderTestCase([".pytest_cache", "manage.py"], "./manage.py test"),
-        CommandFinderTestCase(
-            [".pytest_cache", "manage.py"],
-            "just test",
-            file_contents=[("justfile", "test:\ncool")],
-        ),
-        CommandFinderTestCase(
-            [".pytest_cache", "manage.py"],
-            "./manage.py test",
-            file_contents=[("justfile", "xtest:\ncool")],
-        ),
-        CommandFinderTestCase(
             [".pytest_cache", "manage.py"],
             "make test",
-            file_contents=[("Makefile", "test:\ncool")],
+            file_contents=[("Makefile", "test:\n  cool")],
         ),
+        CommandFinderTestCase(
+            ["manage.py"],
+            "make test",
+            file_contents=[("Makefile", "test:\n  cool")],
+        ),
+        CommandFinderTestCase([".pytest_cache", "manage.py"], "./manage.py test"),
     ],
     ids=repr,
 )
+@patch("subprocess.run")
 def test_find_test_command(
+    mock_run: Mock,
     test_case: CommandFinderTestCase,
     build_context: ContextBuilderFunc,
     write_file: FileWriterFunc,
@@ -271,8 +291,51 @@ def test_find_test_command(
 
     it's useful for ensuring ordering of certain matchers
     """
+
+    mock_run.side_effect = lambda *_, **__: pytest.fail(
+        "this test shouldn't be shelling out at all"
+    )
+
     for f in test_case.file_contents:
         write_file(*f)
+
+    c = build_context(test_case.files, test_case.args)
+    assert matchers.find_test_command(c) == test_case.expected_command.split()
+
+
+@pytest.mark.parametrize(
+    ["test_case", "recipe"],
+    [
+        (CommandFinderTestCase(["justfile"], "just test"), "test"),
+        (CommandFinderTestCase(["justfile"], ""), "xtest"),
+        (CommandFinderTestCase([".pytest_cache", "justfile"], "just test"), "test"),
+        (CommandFinderTestCase([".pytest_cache", "justfile"], "pytest"), "xtest"),
+        (
+            CommandFinderTestCase(
+                [".pytest_cache", "manage.py", "justfile"], "just test"
+            ),
+            "test",
+        ),
+        (
+            CommandFinderTestCase(
+                [".pytest_cache", "manage.py", "justfile"], "./manage.py test"
+            ),
+            "xtest",
+        ),
+    ],
+)
+@patch("subprocess.run")
+def test_find_command_test_runner_priority(
+    mock_run: Mock,
+    test_case: CommandFinderTestCase,
+    recipe,
+    build_context: ContextBuilderFunc,
+    justfile_json,
+):
+    """
+    like the above, but just is installed and returns valid json (if required)
+    """
+    mock_run.return_value.stdout = justfile_json(recipe)
 
     c = build_context(test_case.files, test_case.args)
     assert matchers.find_test_command(c) == test_case.expected_command.split()

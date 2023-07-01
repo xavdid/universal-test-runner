@@ -1,4 +1,6 @@
+import json
 import re
+import subprocess
 from dataclasses import dataclass
 from typing import Callable, Optional
 
@@ -66,14 +68,36 @@ makefile = Matcher(
     debug_line='looking for: a "Makefile" and a "test:" line',
 )
 
+
+def _matches_justfile(c: Context) -> bool:
+    # TODO: better capitalization support? the file is supposed to be case-insensitive
+    if not c.has_files("justfile"):
+        return False
+
+    # try to call `just` and get the JSON structure
+    try:
+        result = subprocess.run(
+            # unstable flag isn't needed now that https://github.com/casey/just/issues/1632 is merged
+            # but all users may not have it yet and I don't expect the format to change
+            ["just", "--dump", "--dump-format", "json", "--unstable"],
+            capture_output=True,
+            cwd=c.cwd,
+            check=True,
+        )
+        file = json.loads(result.stdout)
+        return "test" in file.get("recipes", {})
+
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        # either:
+        # - just isn't installed
+        # - something else went wrong (probably an invalid justfile)
+        # in either case, fall back to a more basic check and let `just` error out if relevant
+        return any(re.match(r"^@?test(:| )", l) for l in c.read_file("justfile"))
+
+
 justfile = Matcher(
     "justfile",
-    # TODO: better capitalization support? the file is supposed to be case-insensitive
-    lambda c: c.has_files("justfile")
-    # TODO: maybe use the JSON interface once https://github.com/casey/just/issues/1632 is closed?
-    and any(
-        l.startswith("test") or l.startswith("@test") for l in c.read_file("justfile")
-    ),
+    _matches_justfile,
     "just test",
     debug_line='looking for: a "justfile" and a "test" or "@test" line',
 )
