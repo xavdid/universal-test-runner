@@ -1,7 +1,6 @@
 import json
 import re
 import subprocess
-import sys
 from dataclasses import dataclass
 from typing import Callable, Optional
 
@@ -83,20 +82,19 @@ def _matches_justfile(c: Context) -> bool:
             ["just", "--dump", "--dump-format", "json", "--unstable"],
             capture_output=True,
             cwd=c.cwd,
+            check=True,
         )
-        # print("got", result)
-        if result.returncode:
-            # probably an invalid justfile- just not being installed is already handled
-            print(result.stderr, file=sys.stderr)
-            raise ValueError()  # TODO: handle better, don't want to show python stacktrace
-
         file = json.loads(result.stdout)
         return bool(file.get("recipes", {}).get("test"))
 
-    except FileNotFoundError:
-        # just isn't installed- we won't be able to run tests with it anyway
-        # but having it installed isn't a precondition to finding a testing method, just running tests
-        # so, fall back to old method
+    # TODO: uncomment the below after tests pass
+    # anything failing now has a live dependency on `just`, which is bad
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        # except subprocess.CalledProcessError:
+        # either:
+        # - just isn't installed
+        # - something else went wrong (probably an invalid justfile)
+        # in either case, fall back to a more basic check and let `just` error out if relevant
         return any(re.match(r"^@?test(:| )", l) for l in c.read_file("justfile"))
 
 

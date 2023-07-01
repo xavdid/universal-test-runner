@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import Optional, Protocol
 
@@ -49,3 +50,60 @@ def write_file(tmp_path: Path) -> FileWriterFunc:
         (tmp_path / filename).write_text(data)
 
     return _write
+
+
+@pytest.fixture
+def justfile_json() -> str:
+    return json.dumps(
+        {
+            "aliases": {},
+            "assignments": {},
+            "first": "default",
+            "recipes": {
+                "default": {
+                    "attributes": [],
+                    "body": [["just --list"]],
+                    "dependencies": [],
+                    "doc": None,
+                    "name": "default",
+                    "parameters": [],
+                    "priors": 0,
+                    "private": False,
+                    "quiet": False,
+                    "shebang": False,
+                },
+                "test": {
+                    "attributes": [],
+                    "body": [["pytest ", [["variable", "options"]]]],
+                    "dependencies": [],
+                    "doc": None,
+                    "name": "test",
+                    "parameters": [
+                        {
+                            "default": None,
+                            "export": False,
+                            "kind": "star",
+                            "name": "options",
+                        }
+                    ],
+                    "priors": 0,
+                    "private": False,
+                    "quiet": True,
+                    "shebang": False,
+                },
+            },
+            "settings": {
+                "allow_duplicate_recipes": False,
+                "dotenv_load": None,
+                "export": False,
+                "fallback": False,
+                "ignore_comments": False,
+                "positional_arguments": False,
+                "shell": None,
+                "tempdir": None,
+                "windows_powershell": False,
+                "windows_shell": None,
+            },
+            "warnings": [],
+        }
+    )
