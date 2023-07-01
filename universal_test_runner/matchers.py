@@ -85,12 +85,9 @@ def _matches_justfile(c: Context) -> bool:
             check=True,
         )
         file = json.loads(result.stdout)
-        return bool(file.get("recipes", {}).get("test"))
+        return "test" in file.get("recipes", {})
 
-    # TODO: uncomment the below after tests pass
-    # anything failing now has a live dependency on `just`, which is bad
     except (FileNotFoundError, subprocess.CalledProcessError):
-        # except subprocess.CalledProcessError:
         # either:
         # - just isn't installed
         # - something else went wrong (probably an invalid justfile)

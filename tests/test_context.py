@@ -151,3 +151,16 @@ def test_debugging_is_disableable(capsys, build_context: ContextBuilderFunc):
 
     out, _ = capsys.readouterr()
     assert out == ""
+
+
+def test_file_cache_hits(build_context: ContextBuilderFunc, write_file: FileWriterFunc):
+    write_file("package.json", "{}")
+    c = build_context(["package-lock.json", "yarn.lock", "pnpm-lock.yaml"])
+    c._load_file.cache_clear()
+
+    for _ in range(3):
+        c.read_json("package.json")
+
+    assert c._load_file.cache_info().currsize == 1
+    assert c._load_file.cache_info().hits == 2
+    assert c._load_file.cache_info().misses == 1
