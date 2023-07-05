@@ -63,7 +63,7 @@ go_single = Matcher(
 makefile = Matcher(
     "makefile",
     lambda c: c.has_files("Makefile")
-    and any(l.startswith("test:") for l in c.read_file("Makefile")),
+    and any(line.startswith("test:") for line in c.read_file("Makefile")),
     "make test",
     debug_line='looking for: a "Makefile" and a "test:" line',
 )
@@ -92,7 +92,7 @@ def _matches_justfile(c: Context) -> bool:
         # - just isn't installed
         # - something else went wrong (probably an invalid justfile)
         # in either case, fall back to a more basic check and let `just` error out if relevant
-        return any(re.match(r"^@?test(:| )", l) for l in c.read_file("justfile"))
+        return any(re.match(r"^@?test(:| )", line) for line in c.read_file("justfile"))
 
 
 justfile = Matcher(

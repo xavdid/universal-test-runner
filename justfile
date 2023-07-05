@@ -14,11 +14,13 @@ _require-venv:
     tox -p
 
 @lint:
+    ruff .
     isort --check --quiet .
     black --check --quiet .
 
 # lint&fix files, useful for a pre-commit hook
 @lint-fix:
+    ruff . --fix
     isort --quiet .
     black --quiet .
 

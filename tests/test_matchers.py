@@ -186,7 +186,7 @@ def test_invalid_justfile(mock_run: Mock, build_context: ContextBuilderFunc):
     c = build_context(["justfile"])
     c._load_file.cache_clear()
 
-    assert matchers.justfile.matches(c) == False
+    assert matchers.justfile.matches(c) is False
     # tried to load the file
     assert c._load_file.cache_info().currsize == 1
     assert c._load_file.cache_info().hits == 0
