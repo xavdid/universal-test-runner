@@ -1,4 +1,4 @@
-default:
+_default:
     just --list
 
 # error out if this isn't being run in a venv
@@ -15,13 +15,11 @@ _require-venv:
 
 @lint:
     ruff .
-    isort --check --quiet .
     black --check --quiet .
 
 # lint&fix files, useful for a pre-commit hook
 @lint-fix:
     ruff . --fix
-    isort --quiet .
     black --quiet .
 
 @typecheck:
@@ -36,7 +34,7 @@ ci: && validate
 
 # useful for reinstalling after changing dependencies
 @reinstall: _require-venv
-    pip install -e .[test]
+    pip install -e .[test,ci]
 
 @release: _require-venv validate
     rm -rf dist
