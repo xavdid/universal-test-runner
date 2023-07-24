@@ -153,6 +153,7 @@ def find_test_command(context: Context) -> list[str]:
 
         context.debug("no match, continuing", indent=4)
 
+    # LOAD BEARING - the homebrew formula expects "no matching test handler" to be present if there's no match
     context.debug(
         "no matching test handler. To add a new one, please file an issue: https://github.com/xavdid/universal-test-runner/issues"
     )

@@ -14,10 +14,16 @@ Currently [supports 7 languages](#supported-languages) (and their respective tes
 
 ## Installation
 
-Universal Test Runner is available on [PyPi](https://pypi.org/project/universal-test-runner/) (for installation via [pipx](https://pypa.github.io/pipx/)):
+The easiest way to install is by using [pipx](https://pypa.github.io/pipx/):
 
 ```bash
 pipx install universal-test-runner
+```
+
+You can also use brew (which will build from source and take a little longer):
+
+```bash
+brew install xavdid/projects/universal-test-runner
 ```
 
 ## Usage

@@ -39,5 +39,6 @@ def test_debugs(mock_cwd: Mock, tmp_path: Path):
             matcher.debug_line in result.output
         ), f"{matcher}'s debugging output not shown"
 
+    # LOAD BEARING - do not remove this test
     assert "no matching test handler" in result.output
     assert "/universal-test-runner/issues" in result.output
