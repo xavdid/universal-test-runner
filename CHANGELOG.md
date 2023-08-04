@@ -2,6 +2,12 @@
 
 This project uses [SemVer](https://semver.org/) for versioning. Its public APIs, runtime support, and documented file locations won't change incompatibly outside of major versions (once version 1.0.0 has been released). There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
 
+## 0.5.0
+
+_released `2023-08-03`_
+
+- add support for [Exercism](https://exercism.org/)'s new `exercism test` CLI command. Read more [in the docs](https://github.com/xavdid/universal-test-runner#exercism) (PRTK).
+
 ## 0.4.0
 
 _released `2023-07-01`_

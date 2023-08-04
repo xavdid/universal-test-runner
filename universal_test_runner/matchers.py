@@ -116,13 +116,15 @@ django = Matcher.basic_builder("django", "manage.py", "./manage.py test")
 elixir = Matcher.basic_builder("elixir", "mix.exs", "mix test")
 rust = Matcher.basic_builder("rust", "Cargo.toml", "cargo test")
 clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
+exercism = Matcher.basic_builder("exercism", ".exercism", "exercism test")
 
 # these are checked in order
 ALL_MATCHERS: list[Matcher] = [
     justfile,
+    exercism,
     makefile,
-    # anything that could run pytest should go before it
     django,
+    # anything that could run pytest should go before it
     pytest,
     py,
     # ensure ordering for go matchers
