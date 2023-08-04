@@ -98,29 +98,39 @@ The package also ships a command to surface info about itself: `universal-test-r
 
 ## Supported Languages
 
-This tree describes the rough priority order within each language (not the languages themselves).
+This list describes how each language behaves (but not the order in which languages are matched; use the [debugger](#debugging) for that).
 
-1. Python
-   - checks for `manage.py` (Django)
-   - else uses `pytest` if you've run `pytest` before. You'll need to run pytest manually on clean installs before `t` will work
-   - looks for a `tests.py` file if not
-2. Rust
-   - `cargo test`
-3. Go
-   - if there's a `X_test.go`, then runs a plain `go test`
-   - if you pass any args at all, runs `go test your-args-here`
-   - otherwise, runs `go test ./...`
-4. Elixir
-   - runs `mix test`
-5. Clojure
-   - runs `lein test`
-6. Makefile
-   - looks for a line that starts with `test:`
-7. Javascript/Typescript
-   - if there's a `package.json` and it has a `test` script, runs `[package manager] test`, where `[package manager]` is:
-     - `npm` if there's a `package-lock.json`
-     - `yarn` if there's a `yarn.lock`
-     - `pnpm` if there's a `pnpm-lock.yaml`
+- Python
+  - checks for `manage.py` (Django)
+  - else uses `pytest` if you've run `pytest` before. You'll need to run pytest manually on clean installs before `t` will work
+  - looks for a `tests.py` file if not
+- Rust
+  - `cargo test`
+- Go
+  - if there's a `X_test.go`, then runs a plain `go test`
+  - if you pass any args at all, runs `go test your-args-here`
+  - otherwise, runs `go test ./...`
+- Elixir
+  - `mix test`
+- Clojure
+  - `lein test`
+- Javascript/Typescript
+  - if there's a `package.json` and it has a `test` script, runs `[package manager] test`, where `[package manager]` is:
+    - `npm` if there's a `package-lock.json`
+    - `yarn` if there's a `yarn.lock`
+    - `pnpm` if there's a `pnpm-lock.yaml`
+- [justfile](https://github.com/casey/just)
+  - uses the JSON api to find a `test` command
+- Makefile
+  - looks for a line that starts with `test:`
+
+### Exercism
+
+[Exercism](https://exercism.org/) is a platform for learning new programming languages. It has more than 65 tracks available. The Universal Test Runner supports nearly all of them out of the box using the [Exercism CLI](https://exercism.org/docs/using/solving-exercises/working-locally)'s `exercism test` command. Just like this tool, it knows how to run each track's tests and invokes the correct one automatically.
+
+Rather than re-implement all of the test commands `exercism` can handle, the runner will invoke the Exercism CLI when run from an exercise directory. This requires version `3.2.0` of the Exercism CLI installed.
+
+> fun fact: I [added the test command](https://github.com/exercism/cli/pull/1092) after it was suggested in the [forum thread](https://forum.exercism.org/t/introducing-the-universal-test-runner/6228) where I announced the Universal Test Runner
 
 ## Motivation
 
