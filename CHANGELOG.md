@@ -6,7 +6,7 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 
 _released `2023-08-03`_
 
-- add support for [Exercism](https://exercism.org/)'s new `exercism test` CLI command. Read more [in the docs](https://github.com/xavdid/universal-test-runner#exercism) (PRTK).
+- add support for [Exercism](https://exercism.org/)'s new `exercism test` CLI command. Read more [in the docs](https://github.com/xavdid/universal-test-runner#exercism) ([#5](https://github.com/xavdid/universal-test-runner/pull/5)).
 
 ## 0.4.0
 
