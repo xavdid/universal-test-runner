@@ -2,6 +2,12 @@
 
 This project uses [SemVer](https://semver.org/) for versioning. Its public APIs, runtime support, and documented file locations won't change incompatibly outside of major versions (once version 1.0.0 has been released). There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
 
+## 0.5.1
+
+_released `2023-08-11`_
+
+- include `--` after the `exercism test` command, so args are correctly passed through to the underlying test command (e.g. `t --include pending` runs `exercism test -- --include-pending`) ([#6](https://github.com/xavdid/universal-test-runner/pull/6))
+
 ## 0.5.0
 
 _released `2023-08-03`_

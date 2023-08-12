@@ -43,7 +43,7 @@ simple_command_tests = [
     (matchers.yarn, ["yarn", "test"]),
     (matchers.pnpm, ["pnpm", "test"]),
     (matchers.justfile, ["just", "test"]),
-    (matchers.exercism, ["exercism", "test"]),
+    (matchers.exercism, ["exercism", "test", "--"]),
 ]
 
 
@@ -277,7 +277,7 @@ class CommandFinderTestCase:
             file_contents=[("Makefile", "test:\n  cool")],
         ),
         CommandFinderTestCase([".pytest_cache", "manage.py"], "./manage.py test"),
-        CommandFinderTestCase([".exercism", "Makefile"], "exercism test"),
+        CommandFinderTestCase([".exercism", "Makefile"], "exercism test --"),
     ],
     ids=repr,
 )
@@ -326,7 +326,7 @@ def test_find_test_command(
             "xtest",
         ),
         (CommandFinderTestCase([".exercism", "justfile"], "just test"), "test"),
-        (CommandFinderTestCase([".exercism", "justfile"], "exercism test"), "xtest"),
+        (CommandFinderTestCase([".exercism", "justfile"], "exercism test --"), "xtest"),
     ],
 )
 @patch("subprocess.run")
