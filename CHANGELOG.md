@@ -2,6 +2,12 @@
 
 This project uses [SemVer](https://semver.org/) for versioning. Its public APIs, runtime support, and documented file locations won't change incompatibly outside of major versions (once version 1.0.0 has been released). There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
 
+## 0.6.0
+
+_released `TBD`_
+
+- add support for [bun](https://bun.sh/), which runs `bun test` when it sees a `bun.lockb`
+
 ## 0.5.1
 
 _released `2023-08-11`_

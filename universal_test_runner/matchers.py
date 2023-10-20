@@ -105,6 +105,7 @@ justfile = Matcher(
 npm = Matcher.js_builder("npm", "package-lock.json")
 yarn = Matcher.js_builder("yarn", "yarn.lock")
 pnpm = Matcher.js_builder("pnpm", "pnpm-lock.yaml")
+bun = Matcher.basic_builder("bun", "bun.lockb", "bun test")
 
 # TODO:
 # - ruby?
@@ -136,6 +137,7 @@ ALL_MATCHERS: list[Matcher] = [
     npm,
     yarn,
     pnpm,
+    bun,
 ]
 
 NUM_MATCHERS = len(ALL_MATCHERS)

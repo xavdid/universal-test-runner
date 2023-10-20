@@ -42,6 +42,7 @@ simple_command_tests = [
     (matchers.npm, ["npm", "test"]),
     (matchers.yarn, ["yarn", "test"]),
     (matchers.pnpm, ["pnpm", "test"]),
+    (matchers.bun, ["bun", "test"]),
     (matchers.justfile, ["just", "test"]),
     (matchers.exercism, ["exercism", "test", "--"]),
 ]
@@ -260,8 +261,29 @@ class CommandFinderTestCase:
                     )
                 ],
             )
-            for lockfile in ["package-lock.json", "yarn.lock", "pnpm-lock.yaml"]
+            for lockfile in [
+                "package-lock.json",
+                "yarn.lock",
+                "pnpm-lock.yaml",
+            ]
         ],
+        # bun doesn't care about package.json
+        CommandFinderTestCase(["bun.lockb"], "bun test"),
+        # bun wins ties only if there's no explicit "scripts.test" property
+        CommandFinderTestCase(
+            ["bun.lockb", "yarn.lock"],
+            "bun test",
+            file_contents=[
+                ("package.json", json.dumps({"scripts": {"xtest": "whatever"}}))
+            ],
+        ),
+        CommandFinderTestCase(
+            ["bun.lockb", "yarn.lock"],
+            "yarn test",
+            file_contents=[
+                ("package.json", json.dumps({"scripts": {"test": "whatever"}}))
+            ],
+        ),
         # if a task runner runs pytest, defer to the runner
         CommandFinderTestCase(
             [".pytest_cache"], "make test", file_contents=[("Makefile", "test: cool")]
