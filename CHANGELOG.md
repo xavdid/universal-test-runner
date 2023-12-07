@@ -4,9 +4,10 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 
 ## 0.6.0
 
-_released `TBD`_
+_released `2023-12-06`_
 
 - add support for [bun](https://bun.sh/), which runs `bun test` when it sees a `bun.lockb`
+- add support for my [Advent of Code runner](https://github.com/xavdid/advent-of-code)
 
 ## 0.5.1
 

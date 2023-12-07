@@ -45,6 +45,7 @@ simple_command_tests = [
     (matchers.bun, ["bun", "test"]),
     (matchers.justfile, ["just", "test"]),
     (matchers.exercism, ["exercism", "test", "--"]),
+    (matchers.advent_of_code, ["./advent"]),
 ]
 
 
@@ -98,6 +99,7 @@ class MatcherTestCase:
         MatcherTestCase(matchers.go_single, ["parser_test.go"]),
         MatcherTestCase(matchers.justfile, ["Justfile"], passes=False),
         MatcherTestCase(matchers.exercism, [".exercism"]),
+        MatcherTestCase(matchers.advent_of_code, ["advent"]),
     ],
     ids=repr,
 )
@@ -299,7 +301,12 @@ class CommandFinderTestCase:
             file_contents=[("Makefile", "test:\n  cool")],
         ),
         CommandFinderTestCase([".pytest_cache", "manage.py"], "./manage.py test"),
+        # exercism takes precedence over makefiles
         CommandFinderTestCase([".exercism", "Makefile"], "exercism test --"),
+        CommandFinderTestCase(
+            ["advent"], "make test", file_contents=[("Makefile", "test: cool")]
+        ),
+        CommandFinderTestCase(["advent", ".pytest_cache"], "./advent"),
     ],
     ids=repr,
 )
@@ -349,6 +356,8 @@ def test_find_test_command(
         ),
         (CommandFinderTestCase([".exercism", "justfile"], "just test"), "test"),
         (CommandFinderTestCase([".exercism", "justfile"], "exercism test --"), "xtest"),
+        (CommandFinderTestCase(["justfile", "advent"], "just test"), "test"),
+        (CommandFinderTestCase(["justfile", "advent"], "./advent"), "xtest"),
     ],
 )
 @patch("subprocess.run")
