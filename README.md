@@ -96,6 +96,12 @@ The package also ships a command to surface info about itself: `universal-test-r
 [universal-test-runner]: no matching test handler. To add a new one, please file an issue: https://github.com/xavdid/universal-test-runner/issues
 ```
 
+### Clearing the Terminal
+
+To clear the terminal and scrollback buffer before running the test command, set `UTR_CLEAR_PRE_RUN` in the environment.
+
+This functionality has been tested on iTerm2, `Terminal.app`, and Kitty. Please open an issue if it doesn't work on your terminal.
+
 ## Supported Languages
 
 This list describes how each language behaves (but not the order in which languages are matched; use the [debugger](#debugging) for that).

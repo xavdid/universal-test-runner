@@ -13,6 +13,11 @@ def run_test_command(command: list[str]) -> int:
         print("no testing method found!")
         return 1
 
+    if "UTR_CLEAR_PRE_RUN" in os.environ:
+        # https://github.com/kovidgoyal/kitty/issues/268#issuecomment-419342337
+        # https://apple.stackexchange.com/questions/31872/how-do-i-reset-the-scrollback-in-the-terminal-via-a-shell-command/318217#318217
+        print("\033[2J\033[3J\033[1;1H", end="")
+
     if "UTR_DISABLE_ECHO" not in os.environ:
         just_fix_windows_console()
         print(Style.DIM + "-> " + " ".join(command) + Style.RESET_ALL)

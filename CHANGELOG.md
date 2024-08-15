@@ -2,6 +2,12 @@
 
 This project uses [SemVer](https://semver.org/) for versioning. Its public APIs, runtime support, and documented file locations won't change incompatibly outside of major versions (once version 1.0.0 has been released). There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
 
+## 0.6.1
+
+_released `2024-08-14`_
+
+- add support for the `UTR_CLEAR_PRE_RUN` environment variable, which clears the terminal (and scrollback) before running the test
+
 ## 0.6.0
 
 _released `2023-12-06`_
