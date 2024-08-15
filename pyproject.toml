@@ -22,7 +22,7 @@ dependencies = ["click==8.1.3", "colorama==0.4.6"]
 
 [project.optional-dependencies]
 test = ["pytest==7.3.1", "responses==0.23.1"]
-release = ["twine==4.0.2", "build==0.10.0"]
+release = ["twine==5.1.1", "build==1.2.1"]
 ci = ["pyright==1.1.376", "ruff==0.5.7"]
 
 [project.urls]

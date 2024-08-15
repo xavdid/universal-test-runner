@@ -186,5 +186,6 @@ In your virtual environment, a simple `pytest` should run the unit test suite. Y
 
 > these notes are mostly for myself (or other contributors)
 
-1. Run `just release` while your venv is active
-2. paste the stored API key (If you're getting invalid password, verify that `~/.pypirc` is empty)
+1. bump to desired version in `pyproject.toml` and add `CHANGELOG` entry
+2. Run `just release` while your venv is active
+3. paste the stored API key (If you're getting invalid password, verify that `~/.pypirc` is empty)
