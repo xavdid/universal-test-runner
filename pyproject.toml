@@ -1,6 +1,6 @@
 [project]
 name = "universal-test-runner"
-version = "0.6.0"
+version = "0.6.1"
 
 authors = [{ name = "David Brownman", email = "beamneocube@gmail.com" }]
 description = "Universal, language-aware unit test runner."
