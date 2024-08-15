@@ -119,6 +119,7 @@ This list describes how each language behaves (but not the order in which langua
     - `npm` if there's a `package-lock.json`
     - `yarn` if there's a `yarn.lock`
     - `pnpm` if there's a `pnpm-lock.yaml`
+  - `bun test` if there's a `bun.lockb`
 - [justfile](https://github.com/casey/just)
   - uses the JSON api to find a `test` command
 - Makefile
