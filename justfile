@@ -14,13 +14,13 @@ _require-venv:
     tox -p
 
 @lint:
-    ruff .
-    black --check --quiet .
+    ruff check --quiet .
+    ruff format --check --quiet .
 
 # lint&fix files, useful for a pre-commit hook
 @lint-fix:
-    ruff . --fix
-    black --quiet .
+    ruff check --fix --quiet .
+    ruff format --quiet .
 
 @typecheck:
     pyright -p pyproject.toml
@@ -32,8 +32,8 @@ _require-venv:
 ci: && validate
     pip install .[test,ci]
 
-# useful for reinstalling after changing dependencies
-@reinstall: _require-venv
+# useful for install after changing dependencies
+@install: _require-venv
     pip install -e .[test,ci]
 
 @release: _require-venv validate

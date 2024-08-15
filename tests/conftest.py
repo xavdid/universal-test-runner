@@ -24,8 +24,7 @@ class ContextBuilderFunc(Protocol):
         files: OptionalStrList = None,
         args: OptionalStrList = None,
         debugging=False,
-    ) -> Context:
-        ...
+    ) -> Context: ...
 
 
 @pytest.fixture
@@ -43,8 +42,7 @@ def build_context(tmp_path: Path, touch_files) -> ContextBuilderFunc:
 
 
 class FileWriterFunc(Protocol):
-    def __call__(self, filename: str, data: str) -> None:
-        ...
+    def __call__(self, filename: str, data: str) -> None: ...
 
 
 @pytest.fixture
