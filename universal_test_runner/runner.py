@@ -32,6 +32,9 @@ def run_test_command(command: list[str]) -> int:
 
 # not a click handler, since this is just a passthrough for the underlying test runner
 def run():
+    """
+    the "main" functionality of the `t` command
+    """
     context = Context.from_invocation()
     command = find_test_command(context)
     sys.exit(run_test_command(command))

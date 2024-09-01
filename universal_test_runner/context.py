@@ -8,6 +8,11 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class Context:
+    """
+    An immutable object with helpers for detecting and reading the files in a directory.
+    It prioritizes caching heavily for file reads to make repeated checks against the same files cheap.
+    """
+
     cwd: str
     filenames: frozenset[str]
     args: tuple[str, ...]
@@ -45,12 +50,16 @@ class Context:
     def has_files(self, *filenames: str) -> bool:
         return bool(self.filenames) and all(f in self.filenames for f in filenames)
 
+    @cache
+    def _has_test_script(self) -> bool:
+        pkg = self.read_json("package.json")
+        return bool(pkg.get("scripts", {}).get("test"))
+
     def has_test_script_and_lockfile(self, lockfile: str) -> bool:
         if not self.has_files("package.json", lockfile):
             return False
 
-        pkg = self.read_json("package.json")
-        return bool(pkg.get("scripts", {}).get("test"))
+        return self._has_test_script()
 
     def debug(self, message: str, indent=0):
         if not self.debugging or not message:

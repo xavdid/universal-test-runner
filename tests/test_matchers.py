@@ -369,7 +369,7 @@ def test_find_command_test_runner_priority(
     justfile_json,
 ):
     """
-    like the above, but just is installed and returns valid json (if required)
+    like the above, but `just` is installed and returns valid json (if required)
     """
     mock_run.return_value.stdout = justfile_json(recipe)
 

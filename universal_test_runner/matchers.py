@@ -9,6 +9,14 @@ from universal_test_runner.context import Context
 
 @dataclass(frozen=True)  # frozen so I can hash them for tests
 class Matcher:
+    """
+    Encapsulates:
+        - a test command to run
+        - a set of conditions needed for this command to apply
+
+    Also includes some convenience methods for producing `Matcher` instances that follow certain simple patterns
+    """
+
     name: str
     matches: Callable[[Context], Optional[bool]]
     _command: str
