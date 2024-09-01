@@ -12,17 +12,17 @@ _in `context.py`_
 
 When the root command (`t`) is run, it collects information about the directory it's been run in. It's passed to the other methods and helps with determining which files are present and their contents.
 
-### Matchers
+### Commands
 
-_in `matchers.py`_
+_in `commands.py`_
 
-Each available test command (such as `npm test` or `pytest`) has a corresponding `Matcher` instance. They each hold:
+Each available test command (such as `npm test` or `pytest`) has a corresponding `Command` instance. They each hold:
 
-- a function to determine if, based on a given context, this `matcher` should be run
+- a function to determine if, based on a given context, this `command` should be run
 - the resulting test command
 
 ### Picking a command
 
-_in `matchers.py`_
+_in `commands.py`_
 
-`find_test_command` is the aforementioned "big `if` statement", which is technically a `return` in a loop. For each matcher, if `matcher.matches(context)` is `True`, the object is returned to be run.
+`find_test_command` is the aforementioned "big `if` statement", which is technically a `return` in a loop. For each command, if `command.should_run(context)` is `True`, the object is returned (and executed).

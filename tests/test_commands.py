@@ -5,110 +5,110 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-import universal_test_runner.matchers as matchers
+import universal_test_runner.commands as commands
 from tests.conftest import ContextBuilderFunc, FileWriterFunc
 
-matcher_funcs = [
+command_instances = [
     export
-    for export in dir(matchers)
-    if isinstance(getattr(matchers, export), matchers.Matcher)
+    for export in dir(commands)
+    if isinstance(getattr(commands, export), commands.Command)
 ]
 
 
 def test_export():
     """
-    this function asserts that every defined Matcher in `matchers.py` is included in the exported `MATCHERS` list _and_ nothing is double-counted.
+    this function asserts that every defined Command in `command.py` is included in the exported `ALL_COMMANDS` list _and_ nothing is double-counted.
     """
 
-    assert len(matchers.ALL_MATCHERS) == len(
-        matcher_funcs
-    ), "a matcher was written but not added to ALL_MATCHERS"
-    assert len(set(matchers.ALL_MATCHERS)) == len(matchers.ALL_MATCHERS)
-    assert matchers.ALL_MATCHERS.index(matchers.go_multi) < matchers.ALL_MATCHERS.index(
-        matchers.go_single
+    assert len(commands.ALL_COMMANDS) == len(
+        command_instances
+    ), "a command was written but not added to ALL_COMMANDS"
+    assert len(set(commands.ALL_COMMANDS)) == len(commands.ALL_COMMANDS)
+    assert commands.ALL_COMMANDS.index(commands.go_multi) < commands.ALL_COMMANDS.index(
+        commands.go_single
     ), "must run go_multi before go_single"
 
 
 simple_command_tests = [
-    (matchers.pytest, ["pytest"]),
-    (matchers.py, ["python", "tests.py"]),
-    (matchers.django, ["./manage.py", "test"]),
-    (matchers.go_single, ["go", "test"]),
-    (matchers.go_multi, ["go", "test", "./..."]),
-    (matchers.elixir, ["mix", "test"]),
-    (matchers.rust, ["cargo", "test"]),
-    (matchers.clojure, ["lein", "test"]),
-    (matchers.makefile, ["make", "test"]),
-    (matchers.npm, ["npm", "test"]),
-    (matchers.yarn, ["yarn", "test"]),
-    (matchers.pnpm, ["pnpm", "test"]),
-    (matchers.bun, ["bun", "test"]),
-    (matchers.justfile, ["just", "test"]),
-    (matchers.exercism, ["exercism", "test", "--"]),
-    (matchers.advent_of_code, ["./advent"]),
+    (commands.pytest, ["pytest"]),
+    (commands.py, ["python", "tests.py"]),
+    (commands.django, ["./manage.py", "test"]),
+    (commands.go_single, ["go", "test"]),
+    (commands.go_multi, ["go", "test", "./..."]),
+    (commands.elixir, ["mix", "test"]),
+    (commands.rust, ["cargo", "test"]),
+    (commands.clojure, ["lein", "test"]),
+    (commands.makefile, ["make", "test"]),
+    (commands.npm, ["npm", "test"]),
+    (commands.yarn, ["yarn", "test"]),
+    (commands.pnpm, ["pnpm", "test"]),
+    (commands.bun, ["bun", "test"]),
+    (commands.justfile, ["just", "test"]),
+    (commands.exercism, ["exercism", "test", "--"]),
+    (commands.advent_of_code, ["./advent"]),
 ]
 
 
-def test_all_matchers_have_simple_command_test():
+def test_all_commandss_have_simple_command_test():
     assert len(simple_command_tests) == len(
-        matcher_funcs
-    ), "a matcher is missing from simple_command_tests"
+        command_instances
+    ), "a command is missing from simple_command_tests"
 
 
 @pytest.mark.parametrize(
-    ["matcher", "result"],
+    ["command", "result"],
     simple_command_tests,
     ids=[repr(m[0]) for m in simple_command_tests],
 )
-def test_simple_commands(matcher: matchers.Matcher, result: list[str]):
+def test_simple_commands(command: commands.Command, result: list[str]):
     """
-    a simple list of the commands for each matcher so we know if they change unexpectedly
+    a simple list of the commands for each command so we know if they change unexpectedly
     """
-    assert matcher.command == result
+    assert command.test_command == result
 
 
 @dataclass
-class MatcherTestCase:
-    matcher: matchers.Matcher
+class CommandTestCase:
+    command: commands.Command
     files: list[str] = field(default_factory=list)
     # what's the resulting command? if empty, means the test passes
     passes: bool = True
     args: list[str] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        return f"{self.matcher} w/ files={self.files} & args={self.args} -> `{self.passes}`"
+        return f"{self.command} w/ files={self.files} & args={self.args} -> `{self.passes}`"
 
 
 @pytest.mark.parametrize(
     "test_case",
     [
-        # each matcher depends on at least one file, so each matcher with no files should not match
-        *[MatcherTestCase(m, passes=False) for m in matchers.ALL_MATCHERS],
+        # each command depends on at least one file, so each command with no files should not match
+        *[CommandTestCase(m, passes=False) for m in commands.ALL_COMMANDS],
         # simple cases
-        MatcherTestCase(matchers.pytest, [".pytest_cache"]),
-        MatcherTestCase(matchers.py, ["tests.py"]),
-        MatcherTestCase(matchers.django, ["manage.py"]),
-        MatcherTestCase(matchers.elixir, ["mix.exs"]),
-        MatcherTestCase(matchers.rust, ["Cargo.toml"]),
-        MatcherTestCase(matchers.clojure, ["project.clj"]),
+        CommandTestCase(commands.pytest, [".pytest_cache"]),
+        CommandTestCase(commands.py, ["tests.py"]),
+        CommandTestCase(commands.django, ["manage.py"]),
+        CommandTestCase(commands.elixir, ["mix.exs"]),
+        CommandTestCase(commands.rust, ["Cargo.toml"]),
+        CommandTestCase(commands.clojure, ["project.clj"]),
         # these both pass, so ordering in the master list matters
-        MatcherTestCase(matchers.go_multi, ["go.mod"]),
-        MatcherTestCase(matchers.go_single, ["go.mod"]),
-        MatcherTestCase(matchers.go_multi, ["go.mod"], args=["whatever"], passes=False),
-        MatcherTestCase(matchers.go_single, ["go.mod"], args=["token"]),
-        MatcherTestCase(matchers.go_single, ["parser_test.go"]),
-        MatcherTestCase(matchers.justfile, ["Justfile"], passes=False),
-        MatcherTestCase(matchers.exercism, [".exercism"]),
-        MatcherTestCase(matchers.advent_of_code, ["advent"]),
+        CommandTestCase(commands.go_multi, ["go.mod"]),
+        CommandTestCase(commands.go_single, ["go.mod"]),
+        CommandTestCase(commands.go_multi, ["go.mod"], args=["whatever"], passes=False),
+        CommandTestCase(commands.go_single, ["go.mod"], args=["token"]),
+        CommandTestCase(commands.go_single, ["parser_test.go"]),
+        CommandTestCase(commands.justfile, ["Justfile"], passes=False),
+        CommandTestCase(commands.exercism, [".exercism"]),
+        CommandTestCase(commands.advent_of_code, ["advent"]),
     ],
     ids=repr,
 )
-def test_matches(test_case: MatcherTestCase, build_context: ContextBuilderFunc):
+def test_matches(test_case: CommandTestCase, build_context: ContextBuilderFunc):
     """
-    a basic assertion to check that a given set of files/args match a specific Matcher (in isolation)
+    a basic assertion to check that a given set of files/args match a specific Command (in isolation)
     """
     context = build_context(test_case.files, test_case.args)
-    assert test_case.matcher.matches(context) == test_case.passes
+    assert test_case.command.should_run(context) == test_case.passes
 
 
 @pytest.mark.parametrize(
@@ -130,7 +130,7 @@ def test_makefile(
     write_file("Makefile", text)
     c = build_context()
 
-    assert matchers.makefile.matches(c) == expected
+    assert commands.makefile.should_run(c) == expected
 
 
 @pytest.mark.parametrize(
@@ -165,7 +165,7 @@ def test_parse_justfile(
     write_file("justfile", text)
     c = build_context()
 
-    assert matchers.justfile.matches(c) == expected
+    assert commands.justfile.should_run(c) == expected
 
 
 @pytest.mark.parametrize(
@@ -182,7 +182,7 @@ def test_dump_justfile(
     mock_run.return_value.stdout = justfile_json(recipe)
     c = build_context(["justfile"])
 
-    assert matchers.justfile.matches(c) == expected
+    assert commands.justfile.should_run(c) == expected
 
 
 @patch("subprocess.run")
@@ -191,7 +191,7 @@ def test_invalid_justfile(mock_run: Mock, build_context: ContextBuilderFunc):
     c = build_context(["justfile"])
     c._load_file.cache_clear()
 
-    assert matchers.justfile.matches(c) is False
+    assert commands.justfile.should_run(c) is False
     # tried to load the file
     assert c._load_file.cache_info().currsize == 1
     assert c._load_file.cache_info().hits == 0
@@ -318,10 +318,10 @@ def test_find_test_command(
     write_file: FileWriterFunc,
 ):
     """
-    while other tests verify that a specific file passes a specific matcher,
+    while other tests verify that a specific file passes a specific command,
     this makes assertions about the resulting command while running through the entire matching process
 
-    it's useful for ensuring ordering of certain matchers
+    it's useful for ensuring ordering of certain commands
     """
 
     mock_run.side_effect = lambda *_, **__: pytest.fail(
@@ -332,7 +332,7 @@ def test_find_test_command(
         write_file(*f)
 
     c = build_context(test_case.files, test_case.args)
-    assert matchers.find_test_command(c) == test_case.expected_command.split()
+    assert commands.find_test_command(c) == test_case.expected_command.split()
 
 
 @pytest.mark.parametrize(
@@ -374,4 +374,4 @@ def test_find_command_test_runner_priority(
     mock_run.return_value.stdout = justfile_json(recipe)
 
     c = build_context(test_case.files, test_case.args)
-    assert matchers.find_test_command(c) == test_case.expected_command.split()
+    assert commands.find_test_command(c) == test_case.expected_command.split()

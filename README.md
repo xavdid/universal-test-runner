@@ -73,21 +73,21 @@ If it can't guess the testing method, it will tell you so. Feel free to open an 
 The package also ships a command to surface info about itself: `universal-test-runner`. It has a few key pieces of functionality:
 
 - the `universal-test-runner --version` flag, which prints info about your installed package version
-- the `universal-test-runner debug` command, which prints info about which matcher would run (and why):
+- the `universal-test-runner debug` command, which prints info about which command would run (and why):
 
 ```
 % universal-test-runner debug
 [universal-test-runner]: checking each handler for first match
-[universal-test-runner]:   Checking matcher 01/11: pytest
+[universal-test-runner]:   Checking command 01/11: pytest
 [universal-test-runner]:     looking for: ".pytest_cache"
 [universal-test-runner]:     no match, continuing
-[universal-test-runner]:   Checking matcher 02/11: py
+[universal-test-runner]:   Checking command 02/11: py
 [universal-test-runner]:     looking for: "tests.py"
 [universal-test-runner]:     no match, continuing
-[universal-test-runner]:   Checking matcher 03/11: go_multi
+[universal-test-runner]:   Checking command 03/11: go_multi
 [universal-test-runner]:     looking for: "go.mod" and no arguments
 [universal-test-runner]:     no match, continuing
-[universal-test-runner]:   Checking matcher 04/11: go_single
+[universal-test-runner]:   Checking command 04/11: go_single
 [universal-test-runner]:     looking for: "go.mod" or a file named "..._test.go"
 [universal-test-runner]:     no match, continuing
 
@@ -153,10 +153,10 @@ I work in a few languages at a time, so I've actually had a [version of this in 
 
 ### `just` errors when passing CLI args
 
-If you run with args (like `t -k matcher`) and see an error from `just` like:
+If you run with args (like `t -k whatever`) and see an error from `just` like:
 
 ```
-error: Justfile does not contain recipes `-k` or `matcher`.
+error: Justfile does not contain recipes `-k` or `whatever`.
 ```
 
 That means your `test` recipe doesn't accept any options. Make sure it has an `*options` arg that you pass through to your test command:

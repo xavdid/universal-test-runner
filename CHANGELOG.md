@@ -1,6 +1,8 @@
 # Changelog
 
-This project uses [SemVer](https://semver.org/) for versioning. Its public APIs, runtime support, and documented file locations won't change incompatibly outside of major versions (once version 1.0.0 has been released). There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
+This project uses [SemVer](https://semver.org/) for versioning. Its public APIs, runtime support, and documented file locations won't change incompatibly outside of major versions (once version 1.0.0 has been released). Note that it's not meant to be run as a Python library, so there are no guarantees about the name or structure of its internals; use as your own risk.
+
+There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
 
 ## 0.6.1
 

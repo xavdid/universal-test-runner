@@ -4,8 +4,8 @@ import sys
 
 from colorama import Style, just_fix_windows_console
 
+from universal_test_runner.commands import find_test_command
 from universal_test_runner.context import Context
-from universal_test_runner.matchers import find_test_command
 
 
 def run_test_command(command: list[str]) -> int:

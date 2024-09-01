@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from click.testing import CliRunner
 
 from universal_test_runner.cli import cli, debug
-from universal_test_runner.matchers import ALL_MATCHERS
+from universal_test_runner.commands import ALL_COMMANDS
 
 
 def test_prints_help():
@@ -34,10 +34,10 @@ def test_debugs(mock_cwd: Mock, tmp_path: Path):
     assert result.exit_code == 0
     assert "checking each handler for first match" in result.output
 
-    for matcher in ALL_MATCHERS:
+    for command in ALL_COMMANDS:
         assert (
-            matcher.debug_line in result.output
-        ), f"{matcher}'s debugging output not shown"
+            command.debug_line in result.output
+        ), f"{command}'s debugging output not shown"
 
     # LOAD BEARING - do not remove this test
     assert "no matching test handler" in result.output

@@ -8,33 +8,33 @@ from universal_test_runner.context import Context
 
 
 @dataclass(frozen=True)  # frozen so I can hash them for tests
-class Matcher:
+class Command:
     """
     Encapsulates:
         - a test command to run
         - a set of conditions needed for this command to apply
 
-    Also includes some convenience methods for producing `Matcher` instances that follow certain simple patterns
+    Also includes some convenience methods for producing `Command` instances that follow certain simple patterns
     """
 
     name: str
-    matches: Callable[[Context], Optional[bool]]
-    _command: str
+    should_run: Callable[[Context], Optional[bool]]
+    _test_command: str
     debug_line: str
 
     @property
-    def command(self) -> list[str]:
-        return self._command.split()
+    def test_command(self) -> list[str]:
+        return self._test_command.split()
 
     def __repr__(self) -> str:
-        return f"<Matcher {self.name}>"
+        return f"<{type(self).__name__} {self.name}>"
 
     @staticmethod
-    def basic_builder(name: str, file: str, command: str) -> "Matcher":
+    def basic_builder(name: str, file: str, command: str) -> "Command":
         """
         shorthand builder for running a command if a single file is in the file list
         """
-        return Matcher(
+        return Command(
             name,
             lambda c: c.has_files(file),
             command,
@@ -42,8 +42,8 @@ class Matcher:
         )
 
     @staticmethod
-    def js_builder(name: str, lockfile: str) -> "Matcher":
-        return Matcher(
+    def js_builder(name: str, lockfile: str) -> "Command":
+        return Command(
             name,
             lambda c: c.has_test_script_and_lockfile(lockfile),
             f"{name} test",
@@ -53,14 +53,14 @@ class Matcher:
 
 # for go modules with nested packages, running `go test` on its own runs no test.
 # so we have to include the ./... to pick up all packages
-go_multi = Matcher(
+go_multi = Command(
     "go_multi",
     lambda c: c.has_files("go.mod") and not c.args,
     "go test ./...",
     debug_line='looking for: "go.mod" and no arguments',
 )
 # however, if we're in the package root and there's a test file here, then we can just run
-go_single = Matcher(
+go_single = Command(
     "go_single",
     lambda c: c.has_files("go.mod")
     or any(re.search(r"_test.go$", f) for f in c.filenames),
@@ -68,7 +68,7 @@ go_single = Matcher(
     debug_line='looking for: "go.mod" or a file named "..._test.go"',
 )
 
-makefile = Matcher(
+makefile = Command(
     "makefile",
     lambda c: c.has_files("Makefile")
     and any(line.startswith("test:") for line in c.read_file("Makefile")),
@@ -103,33 +103,33 @@ def _matches_justfile(c: Context) -> bool:
         return any(re.match(r"^@?test(:| )", line) for line in c.read_file("justfile"))
 
 
-justfile = Matcher(
+justfile = Command(
     "justfile",
     _matches_justfile,
     "just test",
     debug_line='looking for: a "justfile" and a "test" or "@test" line',
 )
 
-npm = Matcher.js_builder("npm", "package-lock.json")
-yarn = Matcher.js_builder("yarn", "yarn.lock")
-pnpm = Matcher.js_builder("pnpm", "pnpm-lock.yaml")
-bun = Matcher.basic_builder("bun", "bun.lockb", "bun test")
+npm = Command.js_builder("npm", "package-lock.json")
+yarn = Command.js_builder("yarn", "yarn.lock")
+pnpm = Command.js_builder("pnpm", "pnpm-lock.yaml")
+bun = Command.basic_builder("bun", "bun.lockb", "bun test")
 
 # TODO:
 # - ruby?
 
 # misc simple cases
-pytest = Matcher.basic_builder("pytest", ".pytest_cache", "pytest")
-py = Matcher.basic_builder("py", "tests.py", "python tests.py")
-django = Matcher.basic_builder("django", "manage.py", "./manage.py test")
-elixir = Matcher.basic_builder("elixir", "mix.exs", "mix test")
-rust = Matcher.basic_builder("rust", "Cargo.toml", "cargo test")
-clojure = Matcher.basic_builder("clojure", "project.clj", "lein test")
-exercism = Matcher.basic_builder("exercism", ".exercism", "exercism test --")
-advent_of_code = Matcher.basic_builder("advent of code", "advent", "./advent")
+pytest = Command.basic_builder("pytest", ".pytest_cache", "pytest")
+py = Command.basic_builder("py", "tests.py", "python tests.py")
+django = Command.basic_builder("django", "manage.py", "./manage.py test")
+elixir = Command.basic_builder("elixir", "mix.exs", "mix test")
+rust = Command.basic_builder("rust", "Cargo.toml", "cargo test")
+clojure = Command.basic_builder("clojure", "project.clj", "lein test")
+exercism = Command.basic_builder("exercism", ".exercism", "exercism test --")
+advent_of_code = Command.basic_builder("advent of code", "advent", "./advent")
 
 # these are checked in order
-ALL_MATCHERS: list[Matcher] = [
+ALL_COMMANDS: list[Command] = [
     justfile,
     exercism,
     makefile,
@@ -138,7 +138,7 @@ ALL_MATCHERS: list[Matcher] = [
     # anything that could run pytest should go before it
     pytest,
     py,
-    # ensure ordering for go matchers
+    # ensure ordering for go commands
     go_multi,
     go_single,
     elixir,
@@ -150,20 +150,20 @@ ALL_MATCHERS: list[Matcher] = [
     bun,
 ]
 
-NUM_MATCHERS = len(ALL_MATCHERS)
+NUM_COMMANDS = len(ALL_COMMANDS)
 
 
 def find_test_command(context: Context) -> list[str]:
     context.debug("checking each handler for first match")
-    for i, matcher in enumerate(ALL_MATCHERS):
+    for i, command in enumerate(ALL_COMMANDS):
         context.debug(
-            f"Checking matcher {i+1:02}/{NUM_MATCHERS}: {matcher.name}", indent=2
+            f"Checking command {i+1:02}/{NUM_COMMANDS}: {command.name}", indent=2
         )
-        context.debug(matcher.debug_line, indent=4)
-        if matcher.matches(context):
+        context.debug(command.debug_line, indent=4)
+        if command.should_run(context):
             context.debug("matched!", indent=4)
-            context.debug(f"would have run: `{matcher._command}`", indent=6)
-            return [*matcher.command, *context.args]
+            context.debug(f"would have run: `{command._test_command}`", indent=6)
+            return [*command.test_command, *context.args]
 
         context.debug("no match, continuing", indent=4)
 
