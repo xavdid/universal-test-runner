@@ -134,6 +134,14 @@ def _matches_pytest(c: Context) -> bool:
     if c.has_any_files(".pytest_cache", "pytest.ini"):
         return True
 
+    # https://docs.pytest.org/en/6.2.x/customize.html#tox-ini
+    if any(line == "[pytest]" for line in c.read_file("tox.ini")):
+        return True
+
+    # https://docs.pytest.org/en/6.2.x/customize.html#setup-cfg
+    if any(line == "[tool:pytest]" for line in c.read_file("setup.cfg")):
+        return True
+
     # pyproject has a lot of info by different bundlers
     if c.has_all_files(PYPROJECT_TOML):
         if pyproject := c.read_toml(PYPROJECT_TOML):
@@ -194,11 +202,6 @@ def _matches_pytest(c: Context) -> bool:
                 re.search(r"\"pytest ?[<=>]?", contents)
             ):
                 return True
-
-    # one last config spot
-    # https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
-    if c.has_all_files("setup.cfg") and "[tool:pytest]" in c.read_file("setup.cfg"):
-        return True
 
     return False
 

@@ -108,12 +108,13 @@ This list describes how each language behaves (but not the order in which langua
 
 - Python
   - checks for `manage.py` (Django)
-  - else tries to determine if you use `pytest`. It checks:
+  - else tries to determine if you use `pytest` in rough order of simplicity. It checks:
     - if you've got a `.pytest-cache` or `pytest.ini`
+    - if there's a `[pytest]` line in `tox.ini`
+    - if there's a `setup.cfg` and a `[tool:pytest]` line
     - otherwise, it tries to read `pyproject.toml`
       - if you're on Python 3.11+, it parses the file and checks for dependency [locations](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies) [for](https://docs.astral.sh/uv/concepts/dependencies/#development-dependencies) [popular](https://python-poetry.org/docs/managing-dependencies/#dependency-groups) [tools](https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies)
       - otherwise, it does a best-effort regex against the file contents, looking for `[tool.pytest.ini_options]` or [dependency specifiers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers) like `pytest >= 2`
-    - if none of those worked, it lastly looks for `setup.cfg` and a `[tool:pytest]` key
   - looks for a `tests.py` file if not
 - Rust
   - `cargo test`

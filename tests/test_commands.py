@@ -226,7 +226,12 @@ class CommandFinderTestCase:
         CommandFinderTestCase(
             [],
             "pytest",
-            file_contents=[("setup.cfg", "[tool:pytest]\nneat")],
+            file_contents=[("setup.cfg", "[tool:pytest]\nminversion = 6.0")],
+        ),
+        CommandFinderTestCase(
+            [],
+            "pytest",
+            file_contents=[("tox.ini", "[pytest]\nminversion = 6.0")],
         ),
         CommandFinderTestCase(["manage.py"], "./manage.py test"),
         CommandFinderTestCase(["manage.py", ".pytest_cache"], "./manage.py test"),
