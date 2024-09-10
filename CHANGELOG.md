@@ -8,7 +8,8 @@ There may be breaking changes in minor releases before 1.0.0 and will be noted i
 
 _released `TBD`_
 
-- add better `pytest` detection in projects without a `.pytest-cache`
+- add better `pytest` detection in projects without a `.pytest-cache` (https://github.com/xavdid/universal-test-runner/pull/7)
+- flush the stream after sending the screen-clearing escape sequence, which should fix issues where buffered output from test runners is cleared when it shouldn't be
 
 ## 0.6.1
 
