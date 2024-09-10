@@ -208,7 +208,7 @@ pytest = Command(
     "pytest",
     _matches_pytest,
     "pytest",
-    debug_line='looking for: a ".pytest_cache", pytest configuration files, or a a dependency on pytest (from any popular package manager)',
+    debug_line='looking for: a ".pytest_cache", pytest configuration files, or a dependency on pytest in "pyproject.toml" (from any popular package manager)',
 )
 py = Command.basic_builder("py", "tests.py", "python tests.py")
 django = Command.basic_builder("django", "manage.py", "./manage.py test")
