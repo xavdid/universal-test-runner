@@ -108,7 +108,12 @@ This list describes how each language behaves (but not the order in which langua
 
 - Python
   - checks for `manage.py` (Django)
-  - else uses `pytest` if you've run `pytest` before. You'll need to run pytest manually on clean installs before `t` will work
+  - else tries to determine if you use `pytest`. It checks:
+    - if you've got a `.pytest-cache` or `pytest.ini`
+    - otherwise, it tries to read `pyproject.toml`
+      - if you're on Python 3.11+, it parses the file and checks for dependency [locations](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies) [for](https://docs.astral.sh/uv/concepts/dependencies/#development-dependencies) [popular](https://python-poetry.org/docs/managing-dependencies/#dependency-groups) [tools](https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies)
+      - otherwise, it does a best-effort regex against the file contents, looking for `[tool.pytest.ini_options]` or [dependency specifiers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers) like `pytest >= 2`
+    - if none of those worked, it lastly looks for `setup.cfg` and a `[tool:pytest]` key
   - looks for a `tests.py` file if not
 - Rust
   - `cargo test`
@@ -161,7 +166,7 @@ error: Justfile does not contain recipes `-k` or `whatever`.
 
 That means your `test` recipe doesn't accept any options. Make sure it has an `*options` arg that you pass through to your test command:
 
-```makefile
+```justfile
 test *options:
     pytest {{options}}
 ```
