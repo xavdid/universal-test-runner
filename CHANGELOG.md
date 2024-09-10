@@ -4,6 +4,12 @@ This project uses [SemVer](https://semver.org/) for versioning. Its public APIs,
 
 There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
 
+## 0.6.2
+
+_released `TBD`_
+
+- add better `pytest` detection in projects without a `.pytest-cache`
+
 ## 0.6.1
 
 _released `2024-08-14`_
