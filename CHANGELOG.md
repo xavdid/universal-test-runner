@@ -10,6 +10,7 @@ _released `TBD`_
 
 - add better `pytest` detection in projects without a `.pytest-cache` (https://github.com/xavdid/universal-test-runner/pull/7)
 - flush the stream after sending the screen-clearing escape sequence, which should fix issues where buffered output from test runners is cleared when it shouldn't be
+- :exclamation: tweak how `UTR_CLEAR_PRE_RUN` and `UTR_DISABLE_ECHO` are read from the environment. Previously, _any_ set value would engage the option. Now, any value other than `0` is considered "present". So, if you were setting them to `0` before in the hopes of activating those options, set them to `1` instead
 
 ## 0.6.1
 

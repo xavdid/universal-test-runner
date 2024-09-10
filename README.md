@@ -64,7 +64,7 @@ tests/test_context.py::test_builder PASSED                                   [10
 ========================= 1 passed, 77 deselected in 0.03s =========================
 ```
 
-It prints the command it's running as part of the output. To disable that behavior, set `UTR_DISABLE_ECHO` to any value in the environment.
+It prints the command it's running as part of the output. To disable that behavior, set `UTR_DISABLE_ECHO` environment variable to anything besides `0`.
 
 If it can't guess the testing method, it will tell you so. Feel free to open an issue to request wider language support!
 
@@ -98,7 +98,7 @@ The package also ships a command to surface info about itself: `universal-test-r
 
 ### Clearing the Terminal
 
-To clear the terminal and scrollback buffer before running the test command, set `UTR_CLEAR_PRE_RUN` in the environment.
+To clear the terminal and scrollback buffer before running the test command, set the `UTR_CLEAR_PRE_RUN` environment variable to anything besides `0`.
 
 This functionality has been tested on iTerm2, `Terminal.app`, and Kitty. Please open an issue if it doesn't work on your terminal.
 
