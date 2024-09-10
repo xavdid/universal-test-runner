@@ -36,7 +36,7 @@ class Command:
         """
         return Command(
             name,
-            lambda c: c.has_files(file),
+            lambda c: c.has_all_files(file),
             command,
             debug_line=f'looking for: "{file}"',
         )
@@ -55,14 +55,14 @@ class Command:
 # so we have to include the ./... to pick up all packages
 go_multi = Command(
     "go_multi",
-    lambda c: c.has_files("go.mod") and not c.args,
+    lambda c: c.has_all_files("go.mod") and not c.args,
     "go test ./...",
     debug_line='looking for: "go.mod" and no arguments',
 )
 # however, if we're in the package root and there's a test file here, then we can just run
 go_single = Command(
     "go_single",
-    lambda c: c.has_files("go.mod")
+    lambda c: c.has_all_files("go.mod")
     or any(re.search(r"_test.go$", f) for f in c.filenames),
     "go test",
     debug_line='looking for: "go.mod" or a file named "..._test.go"',
@@ -70,7 +70,7 @@ go_single = Command(
 
 makefile = Command(
     "makefile",
-    lambda c: c.has_files("Makefile")
+    lambda c: c.has_all_files("Makefile")
     and any(line.startswith("test:") for line in c.read_file("Makefile")),
     "make test",
     debug_line='looking for: a "Makefile" and a "test:" line',
@@ -79,7 +79,7 @@ makefile = Command(
 
 def _matches_justfile(c: Context) -> bool:
     # TODO: better capitalization support? the file is supposed to be case-insensitive
-    if not c.has_files("justfile"):
+    if not c.has_all_files("justfile"):
         return False
 
     # try to call `just` and get the JSON structure
@@ -118,8 +118,98 @@ bun = Command.basic_builder("bun", "bun.lockb", "bun test")
 # TODO:
 # - ruby?
 
+PYPROJECT_TOML = "pyproject.toml"
+
+
+def any_pytest_str(*deps: str) -> bool:
+    return any(d.startswith("pytest") for d in deps)
+
+
+def _matches_pytest(c: Context) -> bool:
+    # the simplest case is if pytest has been run before and the cache is present
+    # failing that, we can look for configuration in a few places
+    # failing that, we can try all the places one could put dev dependencies
+
+    # https://docs.pytest.org/en/6.2.x/customize.html#pytest-ini
+    if c.has_any_files(".pytest_cache", "pytest.ini"):
+        return True
+
+    # pyproject has a lot of info by different bundlers
+    if c.has_all_files(PYPROJECT_TOML):
+        if pyproject := c.read_toml(PYPROJECT_TOML):
+            # first, check for a pytest configuration block
+            # https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
+            if pyproject.get("tool", {}).get("pytest", {}).get("ini_options"):
+                return True
+
+            # pip looks for `name==1.2.3` or `name <= 1.2.3` style strings in a few places
+            # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
+            if any_pytest_str(
+                # check dev-deps first
+                # TODO: a dig method
+                *pyproject.get("project", {})
+                .get("optional-dependencies", {})
+                .get("test", []),
+                *pyproject.get("project", {})
+                .get("optional-dependencies", {})
+                .get("tests", []),
+                *pyproject.get("project", {}).get("dependencies", []),
+            ):
+                return True
+
+            # each package manager does this slightly differently, because of course it does
+
+            # uv
+            # https://docs.astral.sh/uv/concepts/dependencies/#development-dependencies
+            if (
+                dev_deps := pyproject.get("tool", {})
+                .get("uv", {})
+                .get("dev-dependencies", [])
+            ) and any_pytest_str(*dev_deps):
+                return True
+
+            # poetry
+            # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
+            for k in "test", "dev":
+                if "pytest" in pyproject.get("tool", {}).get("poetry", {}).get(
+                    "group", {}
+                ).get(k, {}).get("dependencies", {}):
+                    return True
+
+            # pdm
+            # https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies
+            if any_pytest_str(
+                *pyproject.get("tool", {})
+                .get("pdm", {})
+                .get("dev-dependencies", {})
+                .get("test", [])
+            ):
+                return True
+
+        else:
+            # file is present, but tomllib isn't. Do a best effort search?
+            contents = c.load_file(PYPROJECT_TOML)
+            # could have a config key or could mention a pytest==1.2.3 dep, hard to say
+            if "[tool.pytest.ini_options]" in contents or bool(
+                re.search(r"\"pytest ?[<=>]?", contents)
+            ):
+                return True
+
+    # one last config spot
+    # https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
+    if c.has_all_files("setup.cfg") and "[tool:pytest]" in c.read_file("setup.cfg"):
+        return True
+
+    return False
+
+
 # misc simple cases
-pytest = Command.basic_builder("pytest", ".pytest_cache", "pytest")
+pytest = Command(
+    "pytest",
+    _matches_pytest,
+    "pytest",
+    debug_line='looking for: a ".pytest_cache", pytest configuration files, or a a dependency on pytest (from any popular package manager)',
+)
 py = Command.basic_builder("py", "tests.py", "python tests.py")
 django = Command.basic_builder("django", "manage.py", "./manage.py test")
 elixir = Command.basic_builder("elixir", "mix.exs", "mix test")

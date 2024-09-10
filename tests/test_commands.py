@@ -7,6 +7,7 @@ import pytest
 
 import universal_test_runner.commands as commands
 from tests.conftest import ContextBuilderFunc, FileWriterFunc
+from universal_test_runner.context import load_toml
 
 command_instances = [
     export
@@ -86,6 +87,7 @@ class CommandTestCase:
         *[CommandTestCase(m, passes=False) for m in commands.ALL_COMMANDS],
         # simple cases
         CommandTestCase(commands.pytest, [".pytest_cache"]),
+        CommandTestCase(commands.pytest, ["pytest.ini"]),
         CommandTestCase(commands.py, ["tests.py"]),
         CommandTestCase(commands.django, ["manage.py"]),
         CommandTestCase(commands.elixir, ["mix.exs"]),
@@ -189,13 +191,13 @@ def test_dump_justfile(
 def test_invalid_justfile(mock_run: Mock, build_context: ContextBuilderFunc):
     mock_run.side_effect = subprocess.CalledProcessError(1, "invalid justfile!")
     c = build_context(["justfile"])
-    c._load_file.cache_clear()
+    c.load_file.cache_clear()
 
     assert commands.justfile.should_run(c) is False
     # tried to load the file
-    assert c._load_file.cache_info().currsize == 1
-    assert c._load_file.cache_info().hits == 0
-    assert c._load_file.cache_info().misses == 1
+    assert c.load_file.cache_info().currsize == 1
+    assert c.load_file.cache_info().hits == 0
+    assert c.load_file.cache_info().misses == 1
 
 
 @dataclass
@@ -213,7 +215,19 @@ class CommandFinderTestCase:
     "test_case",
     [
         CommandFinderTestCase([".pytest_cache"], "pytest"),
-        CommandFinderTestCase([".pytest_cache"], "pytest"),
+        CommandFinderTestCase(["pytest.ini"], "pytest"),
+        CommandFinderTestCase(
+            [],
+            "pytest",
+            file_contents=[
+                ("pyproject.toml", '[tool.pytest.ini_options]\nminversion = "6.0"')
+            ],
+        ),
+        CommandFinderTestCase(
+            [],
+            "pytest",
+            file_contents=[("setup.cfg", "[tool:pytest]\nneat")],
+        ),
         CommandFinderTestCase(["manage.py"], "./manage.py test"),
         CommandFinderTestCase(["manage.py", ".pytest_cache"], "./manage.py test"),
         CommandFinderTestCase(["tests.py"], "python tests.py"),
@@ -375,3 +389,51 @@ def test_find_command_test_runner_priority(
 
     c = build_context(test_case.files, test_case.args)
     assert commands.find_test_command(c) == test_case.expected_command.split()
+
+
+@pytest.mark.parametrize(
+    "file_contents",
+    [
+        '[tool.pytest]\nini_options = { minversion = "6.0" }',
+        '[tool.poetry.group.test.dependencies]\npytest = "^6.0.0"\npytest-mock = "*"',
+        '[tool.poetry.group.dev.dependencies]\npytest = "~7.0.0"',
+    ],
+)
+def test_non_simple_toml_parsing(
+    file_contents, build_context: ContextBuilderFunc, write_file: FileWriterFunc
+):
+    """
+    Python <= 3.10 doesn't ship with tomllib and each of these tests is non-simple. Each works with good parsing, but fails on older versions. I could skip this test on older versions, but I can also just search for (and find) nothing.
+
+    Can remove the failure cases after 2026-10-31
+    https://endoflife.date/python
+    """
+
+    write_file("pyproject.toml", file_contents)
+    c = build_context(["pyproject.toml"])
+    expected = ["pytest"] if load_toml else []
+
+    assert commands.find_test_command(c) == expected
+
+
+@pytest.mark.parametrize(
+    "file_contents",
+    [
+        '[project]\ndependencies = [ "httpx", "pytest" ]',
+        '[project.optional-dependencies]\ntest = ["pytest==2"]',
+        '[project.optional-dependencies]\ntests = ["pytest >= 3"]',
+        '[tool.uv]\ndev-dependencies = [\n  "pytest >=8.1.1,<9"\n]',
+        '[tool.pdm.dev-dependencies]\ntest = ["pytest>= 3"]',
+    ],
+)
+def test_toml_parsing(
+    file_contents, build_context: ContextBuilderFunc, write_file: FileWriterFunc
+):
+    """
+    There are a few cases where, even without tomllib, we can pull a pytest dep out of a file. These should pass on all Python versions.
+    """
+
+    write_file("pyproject.toml", file_contents)
+    c = build_context(["pyproject.toml"])
+
+    assert commands.find_test_command(c) == ["pytest"]

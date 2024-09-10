@@ -69,19 +69,43 @@ def test_load_json_uses_cache(build_context: ContextBuilderFunc, tmp_path: Path)
         (["a", "b", "c"], ["a", "b"], True),
         (["a", "b", "c"], ["a", "b", "c"], True),
         (["a", "b", "c"], ["a", "b", "c", "d"], False),
+        (["a", "b", "c"], ["a", "d"], False),
         ([], ["a", "b", "c", "d"], False),
         (["a"], ["b"], False),
         ([], [], False),
     ],
     ids=repr,
 )
-def test_has_files(
+def test_has_all_files(
     files: list[str],
     looking: list[str],
     expected: bool,
     build_context: ContextBuilderFunc,
 ):
-    assert build_context(files).has_files(*looking) == expected
+    assert build_context(files).has_all_files(*looking) == expected
+
+
+@pytest.mark.parametrize(
+    ["files", "looking", "expected"],
+    [
+        (["a", "b", "c"], ["a"], True),
+        (["a", "b", "c"], ["a", "b"], True),
+        (["a", "b", "c"], ["a", "b", "c"], True),
+        (["a", "b", "c"], ["a", "b", "c", "d"], True),
+        (["a", "b", "c"], ["a", "d"], True),
+        ([], ["a", "b", "c", "d"], False),
+        (["a"], ["b"], False),
+        ([], [], False),
+    ],
+    ids=repr,
+)
+def test_has_any_files(
+    files: list[str],
+    looking: list[str],
+    expected: bool,
+    build_context: ContextBuilderFunc,
+):
+    assert build_context(files).has_any_files(*looking) == expected
 
 
 NO_SCRIPTS = {"scripts": {"build": "tsc", "validate": "yarn"}}
@@ -156,11 +180,26 @@ def test_debugging_is_disableable(capsys, build_context: ContextBuilderFunc):
 def test_file_cache_hits(build_context: ContextBuilderFunc, write_file: FileWriterFunc):
     write_file("package.json", "{}")
     c = build_context(["package-lock.json", "yarn.lock", "pnpm-lock.yaml"])
-    c._load_file.cache_clear()
+    c.load_file.cache_clear()
+    c.read_json.cache_clear()
 
     for _ in range(3):
         c.read_json("package.json")
 
-    assert c._load_file.cache_info().currsize == 1
-    assert c._load_file.cache_info().hits == 2
-    assert c._load_file.cache_info().misses == 1
+    # read_json only loads the file once, because...
+    assert c.load_file.cache_info().currsize == 1
+    assert c.load_file.cache_info().hits == 0
+    assert c.load_file.cache_info().misses == 1
+
+    # read_json only parses the json once
+    assert c.read_json.cache_info().currsize == 1
+    assert c.read_json.cache_info().hits == 2
+    assert c.read_json.cache_info().misses == 1
+
+
+def test_reading_missing_files(build_context: ContextBuilderFunc):
+    c = build_context()
+    assert c.read_json("missing_json") == {}
+    assert c.read_toml("missing_toml") == {}
+    assert c.load_file("empty_str") == ""
+    assert c.read_file("empty_lines") == []
