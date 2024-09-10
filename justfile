@@ -1,3 +1,6 @@
+# don't clear screens after tests, regardless of current environment
+unexport UTR_CLEAR_PRE_RUN
+
 _default:
     just --list
 
@@ -11,6 +14,7 @@ _require-venv:
     pytest {{options}}
 
 @tox:
+    # run a single version with tox -q -e py39
     tox -p
 
 @lint:

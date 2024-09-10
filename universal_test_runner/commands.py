@@ -113,6 +113,7 @@ justfile = Command(
 npm = Command.js_builder("npm", "package-lock.json")
 yarn = Command.js_builder("yarn", "yarn.lock")
 pnpm = Command.js_builder("pnpm", "pnpm-lock.yaml")
+# don't use JS builder because it doesn't need a `test` property in pkg.json
 bun = Command.basic_builder("bun", "bun.lockb", "bun test")
 
 # TODO:
