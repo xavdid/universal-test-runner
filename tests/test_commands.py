@@ -68,7 +68,7 @@ def test_simple_commands(command: commands.Command, result: list[str]):
     assert command.test_command == result
 
 
-@dataclass
+@dataclass(frozen=True)
 class CommandTestCase:
     command: commands.Command
     files: list[str] = field(default_factory=list)
@@ -200,7 +200,7 @@ def test_invalid_justfile(mock_run: Mock, build_context: ContextBuilderFunc):
     assert c.load_file.cache_info().misses == 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class CommandFinderTestCase:
     files: list[str]
     expected_command: str
@@ -208,7 +208,7 @@ class CommandFinderTestCase:
     file_contents: list[tuple[str, str]] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        return f"files={self.files}+{[name for name,_ in self.file_contents]} & args={self.args} -> `{self.expected_command}`"
+        return f"files={self.files + [name for name,_ in self.file_contents]} & args={self.args} -> `{self.expected_command}`"
 
 
 @pytest.mark.parametrize(
