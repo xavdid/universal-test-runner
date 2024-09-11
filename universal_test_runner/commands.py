@@ -42,6 +42,18 @@ class Command:
         )
 
     @staticmethod
+    def any_builder(name: str, files: list[str], command: str) -> "Command":
+        """
+        shorthand builder for running a command if any of these file is in the file list
+        """
+        return Command(
+            name,
+            lambda c: c.has_any_files(*files),
+            command,
+            debug_line=f'looking for any of: "{files}"',
+        )
+
+    @staticmethod
     def js_builder(name: str, lockfile: str) -> "Command":
         return Command(
             name,
@@ -214,7 +226,19 @@ pytest = Command(
     "pytest",
     debug_line='looking for: a ".pytest_cache", pytest configuration files, or a dependency on pytest in "pyproject.toml" (from any popular package manager)',
 )
-py = Command.basic_builder("py", "tests.py", "python tests.py")
+py = Command.any_builder(
+    "py",
+    [
+        "pyproject.toml",
+        "setup.py",
+        "tox.ini",
+        "setup.cfg",
+        "requirements.txt",
+        ".venv",
+        "venv",
+    ],
+    "python -m unittest",
+)
 django = Command.basic_builder("django", "manage.py", "./manage.py test")
 elixir = Command.basic_builder("elixir", "mix.exs", "mix test")
 rust = Command.basic_builder("rust", "Cargo.toml", "cargo test")

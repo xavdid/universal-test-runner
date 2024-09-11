@@ -32,7 +32,7 @@ def test_export():
 
 simple_command_tests = [
     (commands.pytest, ["pytest"]),
-    (commands.py, ["python", "tests.py"]),
+    (commands.py, ["python", "-m", "unittest"]),
     (commands.django, ["./manage.py", "test"]),
     (commands.go_single, ["go", "test"]),
     (commands.go_multi, ["go", "test", "./..."]),
@@ -88,7 +88,18 @@ class CommandTestCase:
         # simple cases
         CommandTestCase(commands.pytest, [".pytest_cache"]),
         CommandTestCase(commands.pytest, ["pytest.ini"]),
-        CommandTestCase(commands.py, ["tests.py"]),
+        *[
+            CommandTestCase(commands.py, [f])
+            for f in [
+                "pyproject.toml",
+                "setup.py",
+                "tox.ini",
+                "setup.cfg",
+                "requirements.txt",
+                ".venv",
+                "venv",
+            ]
+        ],
         CommandTestCase(commands.django, ["manage.py"]),
         CommandTestCase(commands.elixir, ["mix.exs"]),
         CommandTestCase(commands.rust, ["Cargo.toml"]),
@@ -235,7 +246,19 @@ class CommandFinderTestCase:
         ),
         CommandFinderTestCase(["manage.py"], "./manage.py test"),
         CommandFinderTestCase(["manage.py", ".pytest_cache"], "pytest"),
-        CommandFinderTestCase(["tests.py"], "python tests.py"),
+        # basic python checks for many files that shouldn't get scooped
+        *[
+            CommandFinderTestCase([f], "python -m unittest")
+            for f in [
+                "pyproject.toml",
+                "setup.py",
+                "tox.ini",
+                "setup.cfg",
+                "requirements.txt",
+                ".venv",
+                "venv",
+            ]
+        ],
         CommandFinderTestCase(["go.mod"], "go test ./..."),
         CommandFinderTestCase(
             ["go.mod"], args=["parser"], expected_command="go test parser"
@@ -247,6 +270,7 @@ class CommandFinderTestCase:
         CommandFinderTestCase(["mix.exs"], "mix test"),
         CommandFinderTestCase(["Cargo.toml"], "cargo test"),
         CommandFinderTestCase(["project.clj"], "lein test"),
+        # no files, no command
         CommandFinderTestCase([], ""),
         # basic content tests
         CommandFinderTestCase(
