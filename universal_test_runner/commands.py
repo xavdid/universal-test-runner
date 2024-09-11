@@ -100,7 +100,7 @@ def _matches_justfile(c: Context) -> bool:
         # - just isn't installed
         # - something else went wrong (probably an invalid justfile)
         # in either case, fall back to a more basic check and let `just` error out if relevant
-        return any(re.match(r"^@?test(:| )", line) for line in c.read_file("justfile"))
+        return any(re.search(r"^@?test(:| )", line) for line in c.read_file("justfile"))
 
 
 justfile = Command(
