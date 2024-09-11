@@ -1,7 +1,7 @@
 import json
 import subprocess
 from dataclasses import dataclass, field
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -110,7 +110,8 @@ class CommandTestCase:
         CommandTestCase(commands.go_multi, ["go.mod"], args=["whatever"], passes=False),
         CommandTestCase(commands.go_single, ["go.mod"], args=["token"]),
         CommandTestCase(commands.go_single, ["parser_test.go"]),
-        CommandTestCase(commands.justfile, ["Justfile"], passes=False),
+        # justfile is empty, so it won't pass
+        CommandTestCase(commands.justfile, ["justfile"], passes=False),
         CommandTestCase(commands.exercism, [".exercism"]),
         CommandTestCase(commands.advent_of_code, ["advent"]),
     ],
@@ -144,6 +145,51 @@ def test_makefile(
     c = build_context()
 
     assert commands.makefile.should_run(c) == expected
+
+
+# redeclare rather than import so that if one gets removed from the Command, a test fails
+
+
+def test_all_supported_justfiles_tested():
+    """
+    if the names we check change, this will trigger to ensure `test_justfile_handles_filenames` is watching the right thing
+    """
+    assert commands.JUSTFILE_NAMES == ("justfile", "Justfile", ".justfile")
+
+
+@pytest.mark.parametrize("filename", commands.JUSTFILE_NAMES)
+def test_justfile_handles_filenames(
+    filename, write_file: FileWriterFunc, build_context: ContextBuilderFunc
+):
+    write_file(filename, "test:\n  pytest")
+    c = build_context()
+
+    assert commands.justfile.should_run(c)
+
+
+@patch("subprocess.run")
+def test_justfile_handles_fallback_filenames(
+    mock_run: Mock, build_context: ContextBuilderFunc
+):
+    """
+    because justfiles are read as text if there's an issue with `just`, it's important that all supported filenames get tried
+    """
+    # the just file is "invalid", so it has to be read as text
+    mock_run.side_effect = subprocess.CalledProcessError(1, "invalid justfile!")
+    # give it a file so it tries to parse the justfile at all
+    c = build_context([commands.JUSTFILE_NAMES[0]])
+
+    # can't `mock.patch` a frozen dataclass, so modify the instance directly w/ some cursed magic instead
+    mock_read_file = MagicMock()
+    # every call until the last should be empty; this accounts for adding new filenames
+    mock_read_file.side_effect = [
+        *([] for _ in range(len(commands.JUSTFILE_NAMES) - 1)),
+        ["test:"],
+    ]
+    object.__setattr__(c, "read_file", mock_read_file)
+
+    assert commands.justfile.should_run(c)
+    assert mock_read_file.call_args_list == [call(n) for n in commands.JUSTFILE_NAMES]
 
 
 @pytest.mark.parametrize(
@@ -200,6 +246,9 @@ def test_dump_justfile(
 
 @patch("subprocess.run")
 def test_invalid_justfile(mock_run: Mock, build_context: ContextBuilderFunc):
+    """
+    On an invalid justfile, we read the file itself. The cache checks assure this
+    """
     mock_run.side_effect = subprocess.CalledProcessError(1, "invalid justfile!")
     c = build_context(["justfile"])
     c.load_file.cache_clear()

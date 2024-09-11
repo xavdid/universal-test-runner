@@ -132,8 +132,9 @@ This list describes how each language behaves (but not the order in which langua
     - `yarn` if there's a `yarn.lock`
     - `pnpm` if there's a `pnpm-lock.yaml`
   - `bun test` if there's a `bun.lockb`
-- [justfile](https://github.com/casey/just)
-  - uses the JSON api to find a `test` command
+- [Just](https://github.com/casey/just)
+  - if there are any common justfile names, it uses the JSON api to find a `test` command
+  - if `just` isn't installed, it does its best to parse the file as a string
 - Makefile
   - looks for a line that starts with `test:`
 

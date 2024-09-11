@@ -2,7 +2,7 @@ import json
 import re
 import subprocess
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Sequence
 
 from universal_test_runner.context import Context
 
@@ -18,7 +18,7 @@ class Command:
     """
 
     name: str
-    should_run: Callable[[Context], Optional[bool]]
+    should_run: Callable[[Context], bool]
     _test_command: str
     debug_line: str
 
@@ -42,7 +42,7 @@ class Command:
         )
 
     @staticmethod
-    def any_builder(name: str, files: list[str], command: str) -> "Command":
+    def any_builder(name: str, files: Sequence[str], command: str) -> "Command":
         """
         shorthand builder for running a command if any of these file is in the file list
         """
@@ -50,7 +50,7 @@ class Command:
             name,
             lambda c: c.has_any_files(*files),
             command,
-            debug_line=f'looking for any of: "{files}"',
+            debug_line=f"looking for any of: {files}",
         )
 
     @staticmethod
@@ -88,10 +88,12 @@ makefile = Command(
     debug_line='looking for: a "Makefile" and a "test:" line',
 )
 
+JUSTFILE_NAMES = "justfile", "Justfile", ".justfile"
+
 
 def _matches_justfile(c: Context) -> bool:
-    # TODO: better capitalization support? the file is supposed to be case-insensitive
-    if not c.has_all_files("justfile"):
+    # justfiles are case-insensitive, but it's hard to check _every_ combination
+    if not c.has_any_files(*JUSTFILE_NAMES):
         return False
 
     # try to call `just` and get the JSON structure
@@ -112,14 +114,18 @@ def _matches_justfile(c: Context) -> bool:
         # - just isn't installed
         # - something else went wrong (probably an invalid justfile)
         # in either case, fall back to a more basic check and let `just` error out if relevant
-        return any(re.search(r"^@?test(:| )", line) for line in c.read_file("justfile"))
+        for f in JUSTFILE_NAMES:
+            if any(re.search(r"^@?test(:| )", line) for line in c.read_file(f)):
+                return True
+
+    return False
 
 
 justfile = Command(
     "justfile",
     _matches_justfile,
     "just test",
-    debug_line='looking for: a "justfile" and a "test" or "@test" line',
+    debug_line=f'looking for: any of {JUSTFILE_NAMES} and a "test" or "@test" recipe',
 )
 
 npm = Command.js_builder("npm", "package-lock.json")
@@ -228,7 +234,7 @@ pytest = Command(
 )
 py = Command.any_builder(
     "py",
-    [
+    (
         "pyproject.toml",
         "setup.py",
         "tox.ini",
@@ -236,7 +242,7 @@ py = Command.any_builder(
         "requirements.txt",
         ".venv",
         "venv",
-    ],
+    ),
     "python -m unittest",
 )
 django = Command.basic_builder("django", "manage.py", "./manage.py test")
@@ -247,7 +253,7 @@ exercism = Command.basic_builder("exercism", ".exercism", "exercism test --")
 advent_of_code = Command.basic_builder("advent of code", "advent", "./advent")
 
 # these are checked in order
-ALL_COMMANDS: list[Command] = [
+ALL_COMMANDS: tuple[Command, ...] = (
     justfile,
     exercism,
     makefile,
@@ -266,7 +272,7 @@ ALL_COMMANDS: list[Command] = [
     yarn,
     pnpm,
     bun,
-]
+)
 
 NUM_COMMANDS = len(ALL_COMMANDS)
 
