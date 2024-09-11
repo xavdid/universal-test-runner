@@ -228,9 +228,9 @@ ALL_COMMANDS: list[Command] = [
     exercism,
     makefile,
     advent_of_code,
-    django,
-    # anything that could run pytest should go before it
+    # pytest has django plugins, so if there's both, assume they want pytest
     pytest,
+    django,
     py,
     # ensure ordering for go commands
     go_multi,

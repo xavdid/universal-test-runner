@@ -1,16 +1,17 @@
 # Changelog
 
-This project uses [SemVer](https://semver.org/) for versioning. Its public APIs, runtime support, and documented file locations won't change incompatibly outside of major versions (once version 1.0.0 has been released). Note that it's not meant to be run as a Python library, so there are no guarantees about the name or structure of its internals; use as your own risk.
+This project uses [SemVer](https://semver.org/) for versioning. Its matching order and runtime support won't change incompatibly outside of major versions (once version 1.0.0 has been released). There may be breaking changes in minor and patch releases before 1.0.0 and will be noted in these release notes.
 
-There may be breaking changes in minor releases before 1.0.0 and will be noted in these release notes.
+Note that it's not meant to be run as a Python library, so there are no guarantees about the names or structure of its internals.
 
 ## 0.6.2
 
 _released `TBD`_
 
+- ❗️ BREAKING: prioritize `pytest` before Django's `./manage.py test`. `pytest` can run Django tests via [django-pytest](https://pytest-django.readthedocs.io/en/latest/), but not the other way around
 - add better `pytest` detection in projects without a `.pytest-cache` (https://github.com/xavdid/universal-test-runner/pull/7)
 - flush the stream after sending the screen-clearing escape sequence, which should fix issues where buffered output from test runners is cleared when it shouldn't be
-- :exclamation: tweak how `UTR_CLEAR_PRE_RUN` and `UTR_DISABLE_ECHO` are read from the environment. Previously, _any_ set value would engage the option. Now, any value other than `0` is considered "present". So, if you were setting them to `0` before in the hopes of activating those options, set them to `1` instead
+- ❗ BREAKING: tweak how `UTR_CLEAR_PRE_RUN` and `UTR_DISABLE_ECHO` are read from the environment. Previously, _any_ set value would engage the option. Now, any value other than `0` is considered "present". So, if you were setting them to `0` before in the hopes of activating those options, set them to `1` instead
 
 ## 0.6.1
 
@@ -41,7 +42,7 @@ _released `2023-08-03`_
 
 _released `2023-07-01`_
 
-- :exclamation: BREAKING: prioritize `Makefile` (and `justfile`) over running any tools directly. ([#3](https://github.com/xavdid/universal-test-runner/pull/3))
+- ❗ BREAKING: prioritize `Makefile` (and `justfile`) over running any tools directly. ([#3](https://github.com/xavdid/universal-test-runner/pull/3))
   - This is likely a non-issue unless you have a `Makefile` _and_ an already-supported language and preferred circumventing `make`
   - in that case, use a recipe name besides `test`
 - add django support (https://github.com/xavdid/universal-test-runner/pull/1) and ensure it takes precedence over more generic python testing methods ([223d709](https://github.com/xavdid/universal-test-runner/commit/223d709e17882d56c6efcaa42e07c4bb300f1742))

@@ -234,7 +234,7 @@ class CommandFinderTestCase:
             file_contents=[("tox.ini", "[pytest]\nminversion = 6.0")],
         ),
         CommandFinderTestCase(["manage.py"], "./manage.py test"),
-        CommandFinderTestCase(["manage.py", ".pytest_cache"], "./manage.py test"),
+        CommandFinderTestCase(["manage.py", ".pytest_cache"], "pytest"),
         CommandFinderTestCase(["tests.py"], "python tests.py"),
         CommandFinderTestCase(["go.mod"], "go test ./..."),
         CommandFinderTestCase(
@@ -319,7 +319,6 @@ class CommandFinderTestCase:
             "make test",
             file_contents=[("Makefile", "test:\n  cool")],
         ),
-        CommandFinderTestCase([".pytest_cache", "manage.py"], "./manage.py test"),
         # exercism takes precedence over makefiles
         CommandFinderTestCase([".exercism", "Makefile"], "exercism test --"),
         CommandFinderTestCase(
@@ -368,9 +367,7 @@ def test_find_test_command(
             "test",
         ),
         (
-            CommandFinderTestCase(
-                [".pytest_cache", "manage.py", "justfile"], "./manage.py test"
-            ),
+            CommandFinderTestCase([".pytest_cache", "manage.py", "justfile"], "pytest"),
             "xtest",
         ),
         (CommandFinderTestCase([".exercism", "justfile"], "just test"), "test"),
