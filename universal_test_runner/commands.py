@@ -2,9 +2,34 @@ import json
 import re
 import subprocess
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable, Sequence, TypeVar, Union
 
 from universal_test_runner.context import Context
+
+T = TypeVar("T")
+
+
+def dig(obj: dict[str, Union[T, object]], path: list[str], default: T) -> T:
+    """
+    rough equivalent of ruby's `hash#dig`.
+    Traverse down a dict via the keys in `path`, returning `default` if:
+        - there's a non-dict item before the end of the `path` (so we can't continue), or
+        - any key in `path` isn't present
+
+    the return value should be the type of `default` (so callers can use the results consistently)
+    """
+    val = obj.get(path[0], default)
+
+    if len(path) == 1:
+        # if we're going to return an unexpected shape, bail
+        if isinstance(val, type(default)):
+            return val
+        return default
+
+    if not isinstance(val, dict):
+        return default
+
+    return dig(val, path[1:], default)
 
 
 @dataclass(frozen=True)  # frozen so I can hash them for tests
@@ -166,21 +191,16 @@ def _matches_pytest(c: Context) -> bool:
         if pyproject := c.read_toml(PYPROJECT_TOML):
             # first, check for a pytest configuration block
             # https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
-            if pyproject.get("tool", {}).get("pytest", {}).get("ini_options"):
+            if dig(pyproject, ["tool", "pytest", "ini_options"], {}):
                 return True
 
             # pip looks for `name==1.2.3` or `name <= 1.2.3` style strings in a few places
             # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
             if any_pytest_str(
                 # check dev-deps first
-                # TODO: a dig method
-                *pyproject.get("project", {})
-                .get("optional-dependencies", {})
-                .get("test", []),
-                *pyproject.get("project", {})
-                .get("optional-dependencies", {})
-                .get("tests", []),
-                *pyproject.get("project", {}).get("dependencies", []),
+                *dig(pyproject, ["project", "optional-dependencies", "test"], []),
+                *dig(pyproject, ["project", "optional-dependencies", "tests"], []),
+                *dig(pyproject, ["project", "dependencies"], []),
             ):
                 return True
 
@@ -189,27 +209,22 @@ def _matches_pytest(c: Context) -> bool:
             # uv
             # https://docs.astral.sh/uv/concepts/dependencies/#development-dependencies
             if (
-                dev_deps := pyproject.get("tool", {})
-                .get("uv", {})
-                .get("dev-dependencies", [])
+                dev_deps := dig(pyproject, ["tool", "uv", "dev-dependencies"], [])
             ) and any_pytest_str(*dev_deps):
                 return True
 
             # poetry
             # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
             for k in "test", "dev":
-                if "pytest" in pyproject.get("tool", {}).get("poetry", {}).get(
-                    "group", {}
-                ).get(k, {}).get("dependencies", {}):
+                if "pytest" in dig(
+                    pyproject, ["tool", "poetry", "group", k, "dependencies"], {}
+                ):
                     return True
 
             # pdm
             # https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies
             if any_pytest_str(
-                *pyproject.get("tool", {})
-                .get("pdm", {})
-                .get("dev-dependencies", {})
-                .get("test", [])
+                *dig(pyproject, ["tool", "pdm", "dev-dependencies", "test"], [])
             ):
                 return True
 

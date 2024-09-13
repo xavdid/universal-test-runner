@@ -486,7 +486,7 @@ def test_non_simple_toml_parsing(
 
     write_file("pyproject.toml", file_contents)
     c = build_context(["pyproject.toml"])
-    expected = ["pytest"] if load_toml else []
+    expected = commands.pytest.test_command if load_toml else commands.py.test_command
 
     assert commands.find_test_command(c) == expected
 
@@ -511,4 +511,31 @@ def test_toml_parsing(
     write_file("pyproject.toml", file_contents)
     c = build_context(["pyproject.toml"])
 
-    assert commands.find_test_command(c) == ["pytest"]
+    assert commands.find_test_command(c) == commands.pytest.test_command
+
+
+@pytest.mark.skipif(not load_toml, reason="requires python3.10 or higher")
+@pytest.mark.parametrize(
+    "file_contents",
+    [
+        "",
+        '[projects]\ndependencies = [ "httpx", "pytest" ]',
+        '[project.optional-dependenciez]\ntest = ["pytest==2"]',
+        '[project.optional-dependencies]\ntestz = ["pytest >= 3"]',
+        '[tool.uvz]\ndev-dependencies = [\n  "pytest >=8.1.1,<9"\n]',
+        '[tool.pdmz.dev-dependencies]\ntest = ["pytest>= 3"]',
+        '[tool.pdm.dev--dependencies]\ntest = ["pytest>= 3"]',
+    ],
+)
+def test_toml_parsing_fail_to_find(
+    file_contents, build_context: ContextBuilderFunc, write_file: FileWriterFunc
+):
+    """
+    When parsing with tomllib, I want to make sure valid toml with unexpected structure is handled gracefully.
+    """
+
+    write_file("pyproject.toml", file_contents)
+    c = build_context(["pyproject.toml"])
+
+    # these all read as generic python because of the toml file
+    assert commands.find_test_command(c) == commands.py.test_command
