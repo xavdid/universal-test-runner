@@ -6,10 +6,10 @@ Note that it's not meant to be run as a Python library, so there are no guarante
 
 ## 0.6.2
 
-_released `TBD`_
+_released `2024-09-12`_
 
 - ❗️ BREAKING: prioritize `pytest` before Django's `./manage.py test`. `pytest` can run Django tests via [django-pytest](https://pytest-django.readthedocs.io/en/latest/), but not the other way around
-- ❗️ BREAKING: stop looking for the `tests.py` file, which isn't a standard. Instead if there are any python-related files (such as `pyproject.toml` or `.venv`), run `python -m unittest`
+- ❗️ BREAKING: stop looking for the `tests.py` file, which isn't a standard test location. Instead, if there are any python-related files (such as `pyproject.toml` or `.venv`), run `python -m unittest`
 - add better `pytest` detection in projects without a `.pytest-cache` (https://github.com/xavdid/universal-test-runner/pull/7)
 - add support for justfiles with non-default names:
   - `Justfile`
