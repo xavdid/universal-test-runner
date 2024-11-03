@@ -5,9 +5,10 @@ from dataclasses import dataclass, field
 from functools import cache
 from importlib.util import find_spec
 from pathlib import Path
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable
 
-# tomllib was added to stdlib in 3.11, which is EOL Nov 1, 2027
+# tomllib was added to stdlib in 3.11
+# 3.10 goes EOL Nov 1, 2026: TASK-645
 if find_spec("tomllib"):
     from tomllib import loads as load_toml
 else:
@@ -74,7 +75,7 @@ class Context:
             return {}
 
     @cache
-    def read_toml(self, filename: str) -> Optional[dict]:
+    def read_toml(self, filename: str) -> dict:
         if load_toml:
             return load_toml(self.load_file(filename))
         return {}
