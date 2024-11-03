@@ -7,6 +7,7 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Callable, Iterable, Optional
 
+# tomllib was added to stdlib in 3.11, which is EOL Nov 1, 2027
 if find_spec("tomllib"):
     from tomllib import loads as load_toml
 else:

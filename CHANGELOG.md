@@ -4,6 +4,10 @@ This project uses [SemVer](https://semver.org/) for versioning. Its matching ord
 
 Note that it's not meant to be run as a Python library, so there are no guarantees about the names or structure of its internals.
 
+## Unreleased
+
+- add support for [PEP-735](https://peps.python.org/pep-0735/) dependency groups
+
 ## 0.6.2
 
 _released `2024-09-12`_

@@ -495,17 +495,20 @@ def test_non_simple_toml_parsing(
     "file_contents",
     [
         '[project]\ndependencies = [ "httpx", "pytest" ]',
+        'project.dependencies = [ "httpx", "pytest" ]',
         '[project.optional-dependencies]\ntest = ["pytest==2"]',
         '[project.optional-dependencies]\ntests = ["pytest >= 3"]',
         '[tool.uv]\ndev-dependencies = [\n  "pytest >=8.1.1,<9"\n]',
         '[tool.pdm.dev-dependencies]\ntest = ["pytest>= 3"]',
+        '[dependency-groups]\ntest = ["pytest>= 3"]',
+        'dependency-groups.test = ["pytest>7", "coverage"]',
     ],
 )
 def test_toml_parsing(
     file_contents, build_context: ContextBuilderFunc, write_file: FileWriterFunc
 ):
     """
-    There are a few cases where, even without tomllib, we can pull a pytest dep out of a file. These should pass on all Python versions.
+    Generally, even without tomllib, we can pull a pytest dep out of a file. These should pass on all Python versions.
     """
 
     write_file("pyproject.toml", file_contents)

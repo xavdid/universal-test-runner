@@ -197,7 +197,9 @@ def _matches_pytest(c: Context) -> bool:
             # pip looks for `name==1.2.3` or `name <= 1.2.3` style strings in a few places
             # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
             if any_pytest_str(
-                # check dev-deps first
+                # this will be the new standard, per https://peps.python.org/pep-0735/
+                *dig(pyproject, ["dependency-groups", "test"], []),
+                # otherwise, check other places dependencies could live
                 *dig(pyproject, ["project", "optional-dependencies", "test"], []),
                 *dig(pyproject, ["project", "optional-dependencies", "tests"], []),
                 *dig(pyproject, ["project", "dependencies"], []),
