@@ -4,7 +4,9 @@ This project uses [SemVer](https://semver.org/) for versioning. Its matching ord
 
 Note that it's not meant to be run as a Python library, so there are no guarantees about the names or structure of its internals.
 
-## Unreleased
+## 0.7.0
+
+_released `2024-12-14`_
 
 - add support for [PEP-735](https://peps.python.org/pep-0735/) dependency groups
 - add support for finding `pytest` in uv's default dependency group ([docs](https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups))
