@@ -89,6 +89,8 @@ class Context:
     def has_any_files(self, *filenames: str) -> bool:
         return self._has_files(any, *filenames)
 
+    # no reason to cache, since we're calling with a new lockfile each time
+    # the json parsing is cached already, which would otherwise be the slowest part
     def has_test_script_and_lockfile(self, lockfile: str) -> bool:
         if not self.has_all_files("package.json", lockfile):
             return False

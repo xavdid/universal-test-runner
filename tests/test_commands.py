@@ -32,6 +32,9 @@ def test_export():
 
 simple_command_tests = [
     (commands.pytest, ["pytest"]),
+    (commands.poetry_pytest, ["poetry", "run", "pytest"]),
+    (commands.uv_pytest, ["uv", "run", "pytest"]),
+    (commands.pdm_pytest, ["pdm", "run", "pytest"]),
     (commands.py, ["python", "-m", "unittest"]),
     (commands.django, ["./manage.py", "test"]),
     (commands.go_single, ["go", "test"]),
@@ -382,6 +385,9 @@ class CommandFinderTestCase:
         CommandFinderTestCase(
             [".pytest_cache"], "make test", file_contents=[("Makefile", "test: cool")]
         ),
+        # use python package managers if available
+        CommandFinderTestCase([".pytest_cache", "uv.lock"], "uv run pytest"),
+        CommandFinderTestCase([".pytest_cache", "poetry.lock"], "poetry run pytest"),
         CommandFinderTestCase(
             [".pytest_cache", "manage.py"],
             "make test",

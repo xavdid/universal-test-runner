@@ -2,6 +2,7 @@ import json
 import re
 import subprocess
 from dataclasses import dataclass
+from functools import cache
 from typing import Callable, Sequence, TypeVar, Union
 
 from universal_test_runner.context import Context
@@ -43,9 +44,21 @@ class Command:
     """
 
     name: str
+    """
+    a human-readable way to identify this command
+    """
     should_run: Callable[[Context], bool]
+    """
+    a callable that informs whether this command should run
+    """
     _test_command: str
+    """
+    the shell command that gets executed
+    """
     debug_line: str
+    """
+    a human-readable description of what this command expects if it will run
+    """
 
     @property
     def test_command(self) -> list[str]:
@@ -85,6 +98,22 @@ class Command:
             lambda c: c.has_test_script_and_lockfile(lockfile),
             f"{name} test",
             debug_line=f'looking for: "package.json", a "scripts.test" property, and a "{lockfile}"',
+        )
+
+    @staticmethod
+    def pytest_builder(name: str) -> "Command":
+        """
+        though pytest can be run directly while in an env, a lot of tools can call into the project's env for you
+        """
+        # it's lucky that these are consistent!
+        lockfile = f"{name}.lock"
+        return Command(
+            f"pytest-{name}",
+            # this may cause mismatches (where you define the dep for manager A but have a lockfile for manager B)
+            # but that seems uncommon and an acceptable risk
+            lambda c: c.has_all_files(lockfile) and _matches_pytest(c),
+            f"{name} run pytest",
+            debug_line=f'looking for: a pytest cache / dependency, plus a "{lockfile}"',
         )
 
 
@@ -169,6 +198,7 @@ def _any_pytest_str(*deps: str) -> bool:
     return any(d.startswith("pytest") for d in deps)
 
 
+@cache
 def _matches_pytest(c: Context) -> bool:
     # the simplest case is if pytest has been run before and the cache is present
     # failing that, we can look for configuration in a few places
@@ -244,7 +274,14 @@ def _matches_pytest(c: Context) -> bool:
     return False
 
 
+# these work outside a venv
+uv_pytest = Command.pytest_builder("uv")
+poetry_pytest = Command.pytest_builder("poetry")
+pdm_pytest = Command.pytest_builder("pdm")
+
 # misc simple cases
+
+# this one expects pytest to be available on the $PATH
 pytest = Command(
     "pytest",
     _matches_pytest,
@@ -277,6 +314,9 @@ ALL_COMMANDS: tuple[Command, ...] = (
     exercism,
     makefile,
     advent_of_code,
+    uv_pytest,
+    pdm_pytest,
+    poetry_pytest,
     # pytest has django plugins, so if there's both, assume they want pytest
     pytest,
     django,

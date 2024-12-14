@@ -115,6 +115,8 @@ This list describes how each language behaves (but not the order in which langua
     - otherwise, it tries to read `pyproject.toml`
       - if you're on Python 3.11+, it parses the file and checks for dependency [locations](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies) [for](https://docs.astral.sh/uv/concepts/dependencies/#development-dependencies) [popular](https://python-poetry.org/docs/managing-dependencies/#dependency-groups) [tools](https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies)
       - otherwise, it does a best-effort regex against the file contents, looking for `[tool.pytest.ini_options]` or [dependency specifiers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers) like `pytest >= 2`
+  - if you're using a popular package manager (`uv`, `pdm`, `poetry`) it'll run `<package manager> run pytest`
+  - otherwise, it runs `pytest` directly under the assumption it's available on the `$PATH`
   - lastly, if there are _any_ python-related files, it runs `python -m unittest`, which does its own discovery
 - Rust
   - `cargo test`
