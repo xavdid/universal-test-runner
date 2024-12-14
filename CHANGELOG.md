@@ -7,6 +7,7 @@ Note that it's not meant to be run as a Python library, so there are no guarante
 ## Unreleased
 
 - add support for [PEP-735](https://peps.python.org/pep-0735/) dependency groups
+- add support for finding `pytest` in uv's default dependency group ([docs](https://docs.astral.sh/uv/concepts/projects/dependencies/#dependency-groups))
 
 ## 0.6.2
 

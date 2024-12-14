@@ -165,7 +165,7 @@ bun = Command.basic_builder("bun", "bun.lockb", "bun test")
 PYPROJECT_TOML = "pyproject.toml"
 
 
-def any_pytest_str(*deps: str) -> bool:
+def _any_pytest_str(*deps: str) -> bool:
     return any(d.startswith("pytest") for d in deps)
 
 
@@ -196,9 +196,11 @@ def _matches_pytest(c: Context) -> bool:
 
             # pip looks for `name==1.2.3` or `name <= 1.2.3` style strings in a few places
             # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
-            if any_pytest_str(
+            if _any_pytest_str(
                 # this will be the new standard, per https://peps.python.org/pep-0735/
                 *dig(pyproject, ["dependency-groups", "test"], []),
+                # used as the default dev-dep key for `uv`
+                *dig(pyproject, ["dependency-groups", "dev"], []),
                 # otherwise, check other places dependencies could live
                 *dig(pyproject, ["project", "optional-dependencies", "test"], []),
                 *dig(pyproject, ["project", "optional-dependencies", "tests"], []),
@@ -208,11 +210,11 @@ def _matches_pytest(c: Context) -> bool:
 
             # each package manager does this slightly differently, because of course it does
 
-            # uv
-            # https://docs.astral.sh/uv/concepts/dependencies/#development-dependencies
+            # uv (legacy)
+            # https://docs.astral.sh/uv/concepts/projects/dependencies/#legacy-dev-dependencies
             if (
                 dev_deps := dig(pyproject, ["tool", "uv", "dev-dependencies"], [])
-            ) and any_pytest_str(*dev_deps):
+            ) and _any_pytest_str(*dev_deps):
                 return True
 
             # poetry
@@ -225,7 +227,7 @@ def _matches_pytest(c: Context) -> bool:
 
             # pdm
             # https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies
-            if any_pytest_str(
+            if _any_pytest_str(
                 *dig(pyproject, ["tool", "pdm", "dev-dependencies", "test"], [])
             ):
                 return True

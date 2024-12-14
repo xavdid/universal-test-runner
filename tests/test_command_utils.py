@@ -1,6 +1,6 @@
 import pytest
 
-from universal_test_runner.commands import any_pytest_str, dig
+from universal_test_runner.commands import _any_pytest_str, dig
 
 
 @pytest.mark.parametrize(
@@ -46,4 +46,4 @@ def test_dig(obj: dict, path: list[str], default, expected):
     ],
 )
 def test_any_pytest_str(items, expected):
-    assert any_pytest_str(*items) == expected
+    assert _any_pytest_str(*items) == expected
