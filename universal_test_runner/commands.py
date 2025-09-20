@@ -217,59 +217,58 @@ def _matches_pytest(c: Context) -> bool:
         return True
 
     # pyproject has a lot of info by different bundlers
-    if c.has_all_files(PYPROJECT_TOML):
-        if pyproject := c.read_toml(PYPROJECT_TOML):
-            # first, check for a pytest configuration block
-            # https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
-            if dig(pyproject, ["tool", "pytest", "ini_options"], {}):
-                return True
+    if pyproject := c.read_toml(PYPROJECT_TOML):
+        # first, check for a pytest configuration block
+        # https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
+        if dig(pyproject, ["tool", "pytest", "ini_options"], {}):
+            return True
 
-            # pip looks for `name==1.2.3` or `name <= 1.2.3` style strings in a few places
-            # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
-            if _any_pytest_str(
-                # this will be the new standard, per https://peps.python.org/pep-0735/
-                *dig(pyproject, ["dependency-groups", "test"], []),
-                # used as the default dev-dep key for `uv`
-                *dig(pyproject, ["dependency-groups", "dev"], []),
-                # otherwise, check other places dependencies could live
-                *dig(pyproject, ["project", "optional-dependencies", "test"], []),
-                *dig(pyproject, ["project", "optional-dependencies", "tests"], []),
-                *dig(pyproject, ["project", "dependencies"], []),
+        # pip looks for `name==1.2.3` or `name <= 1.2.3` style strings in a few places
+        # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
+        if _any_pytest_str(
+            # this will be the new standard, per https://peps.python.org/pep-0735/
+            *dig(pyproject, ["dependency-groups", "test"], []),
+            # used as the default dev-dep key for `uv`
+            *dig(pyproject, ["dependency-groups", "dev"], []),
+            # otherwise, check other places dependencies could live
+            *dig(pyproject, ["project", "optional-dependencies", "test"], []),
+            *dig(pyproject, ["project", "optional-dependencies", "tests"], []),
+            *dig(pyproject, ["project", "dependencies"], []),
+        ):
+            return True
+
+        # each package manager does this slightly differently, because of course it does
+
+        # uv (legacy)
+        # https://docs.astral.sh/uv/concepts/projects/dependencies/#legacy-dev-dependencies
+        if (
+            dev_deps := dig(pyproject, ["tool", "uv", "dev-dependencies"], [])
+        ) and _any_pytest_str(*dev_deps):
+            return True
+
+        # poetry
+        # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
+        for k in "test", "dev":
+            if "pytest" in dig(
+                pyproject, ["tool", "poetry", "group", k, "dependencies"], {}
             ):
                 return True
 
-            # each package manager does this slightly differently, because of course it does
+        # pdm
+        # https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies
+        if _any_pytest_str(
+            *dig(pyproject, ["tool", "pdm", "dev-dependencies", "test"], [])
+        ):
+            return True
 
-            # uv (legacy)
-            # https://docs.astral.sh/uv/concepts/projects/dependencies/#legacy-dev-dependencies
-            if (
-                dev_deps := dig(pyproject, ["tool", "uv", "dev-dependencies"], [])
-            ) and _any_pytest_str(*dev_deps):
-                return True
-
-            # poetry
-            # https://python-poetry.org/docs/managing-dependencies/#dependency-groups
-            for k in "test", "dev":
-                if "pytest" in dig(
-                    pyproject, ["tool", "poetry", "group", k, "dependencies"], {}
-                ):
-                    return True
-
-            # pdm
-            # https://pdm-project.org/latest/usage/dependency/#add-development-only-dependencies
-            if _any_pytest_str(
-                *dig(pyproject, ["tool", "pdm", "dev-dependencies", "test"], [])
-            ):
-                return True
-
-        else:
-            # file is present, but tomllib isn't. Do a best effort search?
-            contents = c.load_file(PYPROJECT_TOML)
-            # could have a config key or could mention a pytest==1.2.3 dep, hard to say
-            if "[tool.pytest.ini_options]" in contents or bool(
-                re.search(r"\"pytest ?[<=>]?", contents)
-            ):
-                return True
+    else:
+        # file is present, but tomllib isn't. Do a best effort search?
+        contents = c.load_file(PYPROJECT_TOML)
+        # could have a config key or could mention a pytest==1.2.3 dep, hard to say
+        if "[tool.pytest.ini_options]" in contents or bool(
+            re.search(r"\"pytest ?[<=>]?", contents)
+        ):
+            return True
 
     return False
 
