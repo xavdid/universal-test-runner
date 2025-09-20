@@ -4,45 +4,34 @@ unexport UTR_CLEAR_PRE_RUN
 _default:
     just --list
 
-# error out if this isn't being run in a venv
-_require-venv:
-    #!/usr/bin/env python
-    import sys
-    sys.exit(sys.prefix == sys.base_prefix)
-
 @test *options:
-    pytest {{options}}
+    uv run -- pytest {{options}}
 
+# test against all supported python verions
 @tox:
     # run a single version with tox -q -e py39
-    tox -p
+    uv run -- tox -p
 
 @lint:
-    ruff check --quiet .
-    ruff format --check --quiet .
+    uv run -- ruff check --quiet .
+    uv run -- ruff format --check --quiet .
 
 # lint&fix files, useful for a pre-commit hook
 @lint-fix:
-    ruff check --fix --quiet .
-    ruff format --quiet .
+    uv run -- ruff check --fix --quiet .
+    uv run -- ruff format --quiet .
 
 @typecheck:
-    pyright -p pyproject.toml
+    uv run -- pyright -p pyproject.toml
 
 # perform all checks, but don't change any files
 @validate: tox lint typecheck
 
-# run the full ci pipeline
-ci: && validate
-    pip install .[test,ci]
-
-# useful for install after changing dependencies
-@install: _require-venv
-    pip install -e .[test,ci]
-
-@release: _require-venv validate
+@release: validate
     rm -rf dist
-    pip install -e .[release]
-    python -m build
+    uv sync --group release
+    uv run -- python -m build
+    uv run -- python -m twine check dist/*
+
     # give upload api key at runtime
-    python -m twine upload --username __token__ dist/*
+    python -m twine upload dist/*

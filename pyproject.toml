@@ -2,7 +2,7 @@
 name = "universal-test-runner"
 version = "0.7.0"
 
-authors = [{ name = "David Brownman", email = "beamneocube@gmail.com" }]
+authors = [{ name = "David Brownman", email = "oss@xavd.id" }]
 description = "Universal, language-aware unit test runner."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -20,11 +20,6 @@ keywords = ["testing", "test-runner", "pytest"]
 
 dependencies = ["click==8.1.3", "colorama==0.4.6"]
 
-[project.optional-dependencies]
-test = ["pytest==7.3.1", "responses==0.23.1"]
-release = ["twine==5.1.1", "build==1.2.1"]
-ci = ["pyright==1.1.376", "ruff==0.5.7"]
-
 [project.urls]
 "Homepage" = "https://github.com/xavdid/universal-test-runner"
 "Bug Tracker" = "https://github.com/xavdid/universal-test-runner/issues"
@@ -34,6 +29,12 @@ ci = ["pyright==1.1.376", "ruff==0.5.7"]
 [project.scripts]
 t = "universal_test_runner.runner:run"
 universal-test-runner = "universal_test_runner.cli:cli"
+
+[dependency-groups]
+dev = [{ include-group = "test" }, { include-group = "lint" }, "tox"]
+test = ["pytest==8.4.2", "responses==0.23.1"]
+release = ["twine==6.2.0", "build==1.2.1"]
+lint = ["pyright==1.1.376", "ruff==0.5.7"]
 
 [build-system]
 requires = ["flit_core>=3.4"]
