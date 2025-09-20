@@ -340,7 +340,7 @@ def find_test_command(context: Context) -> list[str]:
     context.debug("checking each handler for first match")
     for i, command in enumerate(ALL_COMMANDS):
         context.debug(
-            f"Checking command {i+1:02}/{NUM_COMMANDS}: {command.name}", indent=2
+            f"Checking command {i + 1:02}/{NUM_COMMANDS}: {command.name}", indent=2
         )
         context.debug(command.debug_line, indent=4)
         if command.should_run(context):

@@ -21,9 +21,9 @@ def test_export():
     this function asserts that every defined Command in `command.py` is included in the exported `ALL_COMMANDS` list _and_ nothing is double-counted.
     """
 
-    assert len(commands.ALL_COMMANDS) == len(
-        command_instances
-    ), "a command was written but not added to ALL_COMMANDS"
+    assert len(commands.ALL_COMMANDS) == len(command_instances), (
+        "a command was written but not added to ALL_COMMANDS"
+    )
     assert len(set(commands.ALL_COMMANDS)) == len(commands.ALL_COMMANDS)
     assert commands.ALL_COMMANDS.index(commands.go_multi) < commands.ALL_COMMANDS.index(
         commands.go_single
@@ -54,9 +54,9 @@ simple_command_tests = [
 
 
 def test_all_commandss_have_simple_command_test():
-    assert len(simple_command_tests) == len(
-        command_instances
-    ), "a command is missing from simple_command_tests"
+    assert len(simple_command_tests) == len(command_instances), (
+        "a command is missing from simple_command_tests"
+    )
 
 
 @pytest.mark.parametrize(
@@ -271,7 +271,7 @@ class CommandFinderTestCase:
     file_contents: list[tuple[str, str]] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        return f"files={self.files + [name for name,_ in self.file_contents]} & args={self.args} -> `{self.expected_command}`"
+        return f"files={self.files + [name for name, _ in self.file_contents]} & args={self.args} -> `{self.expected_command}`"
 
 
 @pytest.mark.parametrize(

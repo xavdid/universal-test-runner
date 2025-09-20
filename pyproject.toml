@@ -34,7 +34,7 @@ universal-test-runner = "universal_test_runner.cli:cli"
 dev = [{ include-group = "test" }, { include-group = "lint" }, "tox"]
 test = ["pytest==8.4.2", "responses==0.23.1"]
 release = ["twine==6.2.0", "build==1.2.1"]
-lint = ["pyright==1.1.376", "ruff==0.5.7"]
+lint = ["pyright==1.1.376", "ruff==0.13.1"]
 
 [build-system]
 requires = ["flit_core>=3.4"]

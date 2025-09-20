@@ -35,9 +35,9 @@ def test_debugs(mock_cwd: Mock, tmp_path: Path):
     assert "checking each handler for first match" in result.output
 
     for command in ALL_COMMANDS:
-        assert (
-            command.debug_line in result.output
-        ), f"{command}'s debugging output not shown"
+        assert command.debug_line in result.output, (
+            f"{command}'s debugging output not shown"
+        )
 
     # LOAD BEARING - do not remove this test
     assert "no matching test handler" in result.output

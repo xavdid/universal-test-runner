@@ -102,4 +102,4 @@ class Context:
         if not self.debugging or not message:
             return
 
-        print(f"[universal-test-runner]: {' '*indent}{message}")
+        print(f"[universal-test-runner]: {' ' * indent}{message}")
