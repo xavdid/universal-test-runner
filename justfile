@@ -34,4 +34,4 @@ _default:
     uv run -- python -m twine check dist/*
 
     # give upload api key at runtime
-    python -m twine upload dist/*
+    uv run -- python -m twine upload dist/*
