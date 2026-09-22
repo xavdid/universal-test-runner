@@ -12,7 +12,7 @@ HELP_LINES = [
 
 
 @click.group(help="\n".join(HELP_LINES))
-@click.version_option()
+@click.version_option(message="%(version)s")
 def cli():
     pass
 

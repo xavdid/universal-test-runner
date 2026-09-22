@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -20,7 +21,8 @@ def test_prints_version():
     result = runner.invoke(cli, ["--version"])
 
     assert result.exit_code == 0
-    assert " version " in result.output
+    # we use the version for changelog url generation, so it should only be the plain semver
+    assert re.match(r"^\d+\.\d+\.\d$", result.output)
 
 
 @patch("sys.argv", new=["test-runner", "q", "-w", "--cool"])

@@ -31,17 +31,18 @@ t = "universal_test_runner.runner:run"
 universal-test-runner = "universal_test_runner.cli:cli"
 
 [dependency-groups]
-dev = [{ include-group = "test" }, { include-group = "lint" }, "tox"]
-test = ["pytest==8.4.2", "responses==0.23.1"]
-release = ["twine==6.2.0", "build==1.2.1"]
-lint = ["pyright==1.1.376", "ruff==0.13.1"]
+dev = [
+  { include-group = "test" },
+  { include-group = "lint" },
+  "tox>=4.32.0",
+  "tox-uv>=1.29.0",
+]
+test = ["pytest==9.1.1", "responses==0.23.1"]
+lint = ["pyright==1.1.414", "ruff==0.16.8"]
 
 [build-system]
-requires = ["flit_core>=3.4"]
-build-backend = "flit_core.buildapi"
-
-# needed so the LSP performs typechecking
-[tool.pyright]
+requires = ["uv_build>=0.12.17,<0.13"]
+build-backend = "uv_build"
 
 [tool.ruff.lint]
 select = ["E", "F", "I001"] # defaults & isort
