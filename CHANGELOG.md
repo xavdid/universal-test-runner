@@ -4,6 +4,12 @@ This project uses [SemVer](https://semver.org/) for versioning. Its matching ord
 
 Note that it's not meant to be run as a Python library, so there are no guarantees about the names or structure of its internals.
 
+## Unreleased
+
+_released `TBD`_
+
+- add quotes when printing test arguments with spaces
+
 ## 0.7.0
 
 _released `2024-12-14`_

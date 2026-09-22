@@ -20,7 +20,12 @@ def run_test_command(command: list[str]) -> int:
 
     if os.environ.get("UTR_DISABLE_ECHO", "0") == "0":
         just_fix_windows_console()
-        print(Style.DIM + "-> " + " ".join(command) + Style.RESET_ALL)
+        print(
+            Style.DIM
+            + "-> "
+            + " ".join(f'"{s}"' if " " in s else s for s in command)
+            + Style.RESET_ALL
+        )
     try:
         return subprocess.run(command).returncode
     except FileNotFoundError:

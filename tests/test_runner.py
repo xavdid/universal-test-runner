@@ -6,12 +6,15 @@ from universal_test_runner.runner import run, run_test_command
 
 
 @patch("subprocess.run")
-def test_run_command(subp_run: Mock):
+def test_run_command(subp_run: Mock, capsys):
     subp_run.return_value = Mock(returncode=0)
 
-    assert run_test_command(["a", "-b", "--c"]) == 0
+    args = ["a", "-b", "--c", "a cool thing"]
+    assert run_test_command(args) == 0
 
-    subp_run.assert_called_once_with(["a", "-b", "--c"])
+    subp_run.assert_called_once_with(args)
+    captured = capsys.readouterr()
+    assert '"a cool thing"' in captured.out
 
 
 @patch("subprocess.run")
