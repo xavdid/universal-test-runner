@@ -2,17 +2,18 @@ import json
 import os
 import re
 import subprocess
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Callable, Sequence, TypeVar, Union
+from typing import TypeVar
 
 from universal_test_runner.context import Context
 
 T = TypeVar("T")
 
 
-def dig(obj: dict[str, Union[T, object]], path: list[str], default: T) -> T:
+def dig(obj: dict[str, T | object], path: list[str], default: T) -> T:
     """
     rough equivalent of ruby's `hash#dig`.
     Traverse down a dict via the keys in `path`, returning `default` if:
@@ -130,16 +131,20 @@ go_multi = Command(
 # however, if we're in the package root and there's a test file here, then we can just run
 go_single = Command(
     "go_single",
-    lambda c: c.has_all_files("go.mod")
-    or any(re.search(r"_test.go$", f) for f in c.filenames),
+    lambda c: (
+        c.has_all_files("go.mod")
+        or any(re.search(r"_test.go$", f) for f in c.filenames)
+    ),
     "go test",
     debug_line='looking for: "go.mod" or a file named "..._test.go"',
 )
 
 makefile = Command(
     "makefile",
-    lambda c: c.has_all_files("Makefile")
-    and any(line.startswith("test:") for line in c.read_file("Makefile")),
+    lambda c: (
+        c.has_all_files("Makefile")
+        and any(line.startswith("test:") for line in c.read_file("Makefile"))
+    ),
     "make test",
     debug_line='looking for: a "Makefile" and a "test:" line',
 )

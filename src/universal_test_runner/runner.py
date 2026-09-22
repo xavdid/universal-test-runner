@@ -27,7 +27,7 @@ def run_test_command(command: list[str]) -> int:
             + Style.RESET_ALL
         )
     try:
-        return subprocess.run(command).returncode
+        return subprocess.run(command).returncode  # noqa: PLW1510 - we don't want to raise an exception
     except FileNotFoundError:
         # e.g. if `pytest` is run, but not installed
         # we capture the error so there's not a Python traceback shown

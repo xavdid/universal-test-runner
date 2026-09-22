@@ -1,12 +1,13 @@
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional, Protocol
+from typing import Protocol
 
 import pytest
 
 from universal_test_runner.context import Context
 
-OptionalStrList = Optional[list[str]]
+OptionalStrList = list[str] | None
 
 
 @pytest.fixture

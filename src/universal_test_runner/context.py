@@ -1,11 +1,10 @@
 import json
-import os
 import sys
 import tomllib
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
-from typing import Callable, Iterable
 
 Checker = Callable[[Iterable[object]], bool]
 
@@ -39,9 +38,9 @@ class Context:
         """
         used by the CLI to auto-capture info about the working directory
         """
-        return Context.build(os.getcwd(), sys.argv[1:], debugging=debugging)
+        return Context.build(str(Path.cwd()), sys.argv[1:], debugging=debugging)
 
-    @cache
+    @cache  # noqa: B019
     def load_file(self, filename: str) -> str:
         """
         get the contents of a file as a string
@@ -59,14 +58,14 @@ class Context:
             return []
         return self.load_file(filename).splitlines()
 
-    @cache
+    @cache  # noqa: B019
     def read_json(self, filename: str):
         try:
             return json.loads(self.load_file(filename))
         except json.decoder.JSONDecodeError:
             return {}
 
-    @cache
+    @cache  # noqa: B019
     def read_toml(self, filename: str) -> dict:
         try:
             return tomllib.loads(self.load_file(filename))

@@ -45,5 +45,45 @@ requires = ["uv_build>=0.12.17,<0.13"]
 build-backend = "uv_build"
 
 [tool.ruff.lint]
-select = ["E", "F", "I001"] # defaults & isort
-ignore = ["E501"]
+extend-select = [
+  "E",    # PEP8 recommendations
+  "F",    # bugs
+  "I001", # import sorting
+  "BLE",  # catching root Exception
+  "A",    # built-in shadowing
+  "C4",   # unnecessary comprehensions
+  "ISC",  # implicit string concat
+  "PIE",  # misc useful lints
+  "Q",    # better quoting behavior
+  "RSE",  # no parens on exceptions that lack args
+  "RET",  # more correct return behavior
+  "SIM",  # general style things
+  "TC",   # type-only imports should be in a typecheck block
+  "ARG",  # unused args
+  "PTH",  # use pathlib
+  "FLY",  # short "".join calls
+  "PERF", # performance hints
+  "PL",   # pylint, general recommendations
+]
+
+extend-ignore = [
+  "E501",    # skip enforcing line length
+  "E741",    # ignore short variable names
+  "PLR2004", # magic values
+  "PLR0911", # too many returns
+  "PLR0912", # too many branches
+  "PLR0913", # too many arguments
+  "PLR0915", # too many statements
+  "Q000",    # single quotes; handled by formatter
+]
+
+unfixable = [
+  "F401", # don't remove unused imports; annoying while editing
+  # run `just lint --fix --fixable F401` to fix these manually
+  "F841", # don't remove unused variables
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+  "PLR0917", # max positional args; I can't control how many fixtures I need
+]

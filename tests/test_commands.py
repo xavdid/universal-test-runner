@@ -1,13 +1,13 @@
 import json
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
-import universal_test_runner.commands as commands
 from tests.conftest import ContextBuilderFunc, FileWriterFunc
+from universal_test_runner import commands
 
 command_instances = [
     export
