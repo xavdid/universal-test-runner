@@ -1,19 +1,11 @@
 import json
 import os
 import sys
+import tomllib
 from dataclasses import dataclass, field
 from functools import cache
-from importlib.util import find_spec
 from pathlib import Path
 from typing import Callable, Iterable
-
-# tomllib was added to stdlib in 3.11
-# 3.10 goes EOL Nov 1, 2026: TASK-645
-if find_spec("tomllib"):
-    from tomllib import loads as load_toml
-else:
-    load_toml = None
-
 
 Checker = Callable[[Iterable[object]], bool]
 
@@ -76,9 +68,10 @@ class Context:
 
     @cache
     def read_toml(self, filename: str) -> dict:
-        if load_toml:
-            return load_toml(self.load_file(filename))
-        return {}
+        try:
+            return tomllib.loads(self.load_file(filename))
+        except tomllib.TOMLDecodeError:
+            return {}
 
     def _has_files(self, checker: Checker, *filenames: str) -> bool:
         return bool(self.filenames) and checker(f in self.filenames for f in filenames)

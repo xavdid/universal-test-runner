@@ -203,3 +203,14 @@ def test_reading_missing_files(build_context: ContextBuilderFunc):
     assert c.read_toml("missing_toml") == {}
     assert c.load_file("empty_str") == ""
     assert c.read_file("empty_lines") == []
+
+
+def test_parsing_invalid_files(
+    write_file: FileWriterFunc, build_context: ContextBuilderFunc
+):
+    write_file("whatever.toml", "invalid")
+    write_file("whatever.json", "invalid")
+
+    c = build_context(["whatever.toml", "whatever.json"])
+    assert c.read_json("whatever.json") == {}
+    assert c.read_toml("whatever.toml") == {}

@@ -8,7 +8,6 @@ import pytest
 
 import universal_test_runner.commands as commands
 from tests.conftest import ContextBuilderFunc, FileWriterFunc
-from universal_test_runner.context import load_toml
 
 command_instances = [
     export
@@ -527,31 +526,6 @@ def test_find_command_test_runner_priority(
 @pytest.mark.parametrize(
     "file_contents",
     [
-        '[tool.pytest]\nini_options = { minversion = "6.0" }',
-        '[tool.poetry.group.test.dependencies]\npytest = "^6.0.0"\npytest-mock = "*"',
-        '[tool.poetry.group.dev.dependencies]\npytest = "~7.0.0"',
-    ],
-)
-def test_non_simple_toml_parsing(
-    file_contents, build_context: ContextBuilderFunc, write_file: FileWriterFunc
-):
-    """
-    Python <= 3.10 doesn't ship with tomllib and each of these tests is non-simple. Each works with good parsing, but fails on older versions. I could skip this test on older versions, but I can also just search for (and find) nothing.
-
-    Can remove the failure cases after 2026-10-31
-    https://endoflife.date/python
-    """
-
-    write_file("pyproject.toml", file_contents)
-    c = build_context(["pyproject.toml"])
-    expected = commands.pytest.test_command if load_toml else commands.py.test_command
-
-    assert commands.find_test_command(c) == expected
-
-
-@pytest.mark.parametrize(
-    "file_contents",
-    [
         '[project]\ndependencies = [ "httpx", "pytest" ]',
         'project.dependencies = [ "httpx", "pytest" ]',
         '[project.optional-dependencies]\ntest = ["pytest==2"]',
@@ -575,7 +549,6 @@ def test_toml_parsing(
     assert commands.find_test_command(c) == commands.pytest.test_command
 
 
-@pytest.mark.skipif(not load_toml, reason="requires python3.10 or higher")
 @pytest.mark.parametrize(
     "file_contents",
     [
