@@ -8,6 +8,7 @@ Note that it's not meant to be run as a Python library, so there are no guarante
 
 _released `TBD`_
 
+- add support for [nextest](https://github.com/nextest-rs/nextest)
 - add quotes when printing test arguments with spaces
 
 ## 0.7.0

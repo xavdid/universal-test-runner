@@ -1,8 +1,10 @@
 import json
+import os
 import re
 import subprocess
 from dataclasses import dataclass
 from functools import cache
+from pathlib import Path
 from typing import Callable, Sequence, TypeVar, Union
 
 from universal_test_runner.context import Context
@@ -140,6 +142,21 @@ makefile = Command(
     and any(line.startswith("test:") for line in c.read_file("Makefile")),
     "make test",
     debug_line='looking for: a "Makefile" and a "test:" line',
+)
+
+
+def _is_nexttest_installed(c: Context) -> bool:
+    cargo_root = Path(os.environ.get("CARGO_HOME", Path.home() / ".cargo"))
+    nexttest_installed = (cargo_root / "bin" / "cargo-nextest").exists()
+
+    return c.has_all_files("Cargo.toml") and nexttest_installed
+
+
+rust_nexttest = Command(
+    "nexttest",
+    _is_nexttest_installed,
+    "cargo nexttest run",
+    debug_line="looking for: Cargo.toml and the availability of the `cargo-nextest` binary",
 )
 
 JUSTFILE_NAMES = "justfile", "Justfile", ".justfile"
@@ -324,6 +341,7 @@ ALL_COMMANDS: tuple[Command, ...] = (
     go_multi,
     go_single,
     elixir,
+    rust_nexttest,
     rust,
     clojure,
     npm,

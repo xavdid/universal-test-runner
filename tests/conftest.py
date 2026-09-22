@@ -11,6 +11,10 @@ OptionalStrList = Optional[list[str]]
 
 @pytest.fixture
 def touch_files(tmp_path: Path):
+    """
+    Returns a function that touches a list of filenames in the temp path
+    """
+
     def _touch(files: list[str]):
         for file in files:
             (tmp_path / file).touch()
@@ -29,6 +33,10 @@ class ContextBuilderFunc(Protocol):
 
 @pytest.fixture
 def build_context(tmp_path: Path, touch_files) -> ContextBuilderFunc:
+    """
+    Return a function that can build a Context object bound to the tmp_path
+    """
+
     def _build(
         files: OptionalStrList = None, args: OptionalStrList = None, debugging=False
     ):

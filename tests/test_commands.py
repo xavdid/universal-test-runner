@@ -1,6 +1,7 @@
 import json
 import subprocess
 from dataclasses import dataclass, field
+from typing import Callable
 from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
@@ -14,6 +15,29 @@ command_instances = [
     for export in dir(commands)
     if isinstance(getattr(commands, export), commands.Command)
 ]
+
+
+@pytest.fixture
+def mock_command_property():
+    """
+    temporarily replace a property on a frozen Command instance with a MagicMock
+    """
+
+    to_restore = []
+
+    def _mock(command: commands.Command, prop: str) -> MagicMock:
+        original = getattr(command, prop)
+        mock_func = MagicMock()
+        object.__setattr__(command, prop, mock_func)
+
+        to_restore.append((command, prop, original))
+
+        return mock_func
+
+    yield _mock
+
+    for c, p, o in to_restore:
+        object.__setattr__(c, p, o)
 
 
 def test_export():
@@ -40,6 +64,7 @@ simple_command_tests = [
     (commands.go_single, ["go", "test"]),
     (commands.go_multi, ["go", "test", "./..."]),
     (commands.elixir, ["mix", "test"]),
+    (commands.rust_nexttest, ["cargo", "nexttest", "run"]),
     (commands.rust, ["cargo", "test"]),
     (commands.clojure, ["lein", "test"]),
     (commands.makefile, ["make", "test"]),
@@ -320,7 +345,6 @@ class CommandFinderTestCase:
             ["parser_test.go"], args=["-v"], expected_command="go test -v"
         ),
         CommandFinderTestCase(["mix.exs"], "mix test"),
-        CommandFinderTestCase(["Cargo.toml"], "cargo test"),
         CommandFinderTestCase(["project.clj"], "lein test"),
         # no files, no command
         CommandFinderTestCase([], ""),
@@ -424,6 +448,34 @@ def test_find_test_command(
     mock_run.side_effect = lambda *_, **__: pytest.fail(
         "this test shouldn't be shelling out at all"
     )
+
+    for f in test_case.file_contents:
+        write_file(*f)
+
+    c = build_context(test_case.files, test_case.args)
+    assert commands.find_test_command(c) == test_case.expected_command.split()
+
+
+@pytest.mark.parametrize(
+    ["test_case", "is_nexttest_installed"],
+    [
+        (CommandFinderTestCase(["Cargo.toml"], "cargo test"), False),
+        (CommandFinderTestCase(["Cargo.toml"], "cargo nexttest run"), True),
+    ],
+)
+def test_get_rust_test_command(
+    test_case: CommandFinderTestCase,
+    is_nexttest_installed: bool,
+    build_context: ContextBuilderFunc,
+    write_file: FileWriterFunc,
+    mock_command_property: Callable[[commands.Command, str], MagicMock],
+):
+    """
+    Rust gets its own test (rather than using test_find_test_command) because it shouldn't depend on whether _I_ have nexttest installed.
+    """
+    mock_command_property(
+        commands.rust_nexttest, "should_run"
+    ).return_value = is_nexttest_installed
 
     for f in test_case.file_contents:
         write_file(*f)
