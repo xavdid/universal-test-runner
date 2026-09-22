@@ -14,7 +14,13 @@ Currently [supports 7 languages](#supported-languages) (and their respective tes
 
 ## Installation
 
-The easiest way to install is by using [pipx](https://pypa.github.io/pipx/):
+The easiest way to install is by using [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install universal-test-runner
+```
+
+Or with [pipx](https://pypa.github.io/pipx/):
 
 ```bash
 pipx install universal-test-runner
@@ -119,7 +125,8 @@ This list describes how each language behaves (but not the order in which langua
   - otherwise, it runs `pytest` directly under the assumption it's available on the `$PATH`
   - lastly, if there are _any_ python-related files, it runs `python -m unittest`, which does its own discovery
 - Rust
-  - `cargo test`
+  - `cargo nextest run` if nextest is installed
+  - `cargo test` otherwise
 - Go
   - if there's a `X_test.go`, then runs a plain `go test`
   - if you pass any args at all, runs `go test your-args-here`
@@ -179,22 +186,19 @@ test *options:
 
 This section is people making changes to this package.
 
-When in a virtual environment, run the following:
+To get set up, run `uv sync`.
 
-```bash
-pip install -e '.[test]'
-```
-
-This installs the package in `--edit` mode and makes its dependencies available. You can now run `t` to run tests and `universal-test-runner` to access help, version, and debugging info.
+This installs the package in `--edit` mode and makes its dependencies available. You can now run `uv run -- t` to run tests and `uv run -- universal-test-runner` to access help, version, and debugging info.
 
 ### Running Tests
 
-In your virtual environment, a simple `pytest` should run the unit test suite. You can also run `pyright` for type checking.
+Use the development version this package to run its own tests: `just dev`. Or, run `just _test` directly.
 
 ### Releasing New Versions
 
 > these notes are mostly for myself (or other contributors)
 
-1. bump to desired version in `pyproject.toml` and add `CHANGELOG` entry
-2. Run `just release` while your venv is active
-3. paste the stored API key (If you're getting invalid password, verify that `~/.pypirc` is empty)
+1. run `just bump <major|minor|patch>` and add `CHANGELOG` entry
+2. commit & push
+3. Run `just release`
+4. paste the stored API key (If you're getting invalid password, verify that `~/.pypirc` is empty)

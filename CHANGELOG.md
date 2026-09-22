@@ -4,11 +4,11 @@ This project uses [SemVer](https://semver.org/) for versioning. Its matching ord
 
 Note that it's not meant to be run as a Python library, so there are no guarantees about the names or structure of its internals.
 
-## Unreleased
+## 0.8.0
 
-_released `TBD`_
+_released `2026-09-22`_
 
-- ❗ drop support for Python 3.9 and 3.10
+- ❗ BREAKING: drop support for Python 3.9 and 3.10
 - add support for [nextest](https://github.com/nextest-rs/nextest)
 - add quotes when printing test arguments with spaces
 
